@@ -60,7 +60,7 @@ SWAPID=0
 declare -a SWAPDES=( "no swap" "swapfile" "swap partition" )
 
 declare CLILIST=""
-OPTIONS="htop git zip unzip sysstat perf nano os-prober mtools dosfstools wget curl ntfs-3g amd-ucode intel-ucode"
+OPTIONS="htop git zip unzip sysstat perf nano os-prober mtools dosfstools wget curl ntfs-3g neofetch amd-ucode intel-ucode"
 declare -A OPDESC
 OPDESC["htop"]="Interactive process viewer"
 OPDESC["git"]="The fast distributed version control system"
@@ -75,6 +75,7 @@ OPDESC["dosfstools"]="DOS filesystem utilities"
 OPDESC["wget"]="Network utility to retrieve files from the Web"
 OPDESC["curl"]="Tool and library for transferring data with URLs"
 OPDESC["ntfs-3g"]="NTFS filesystem driver and utilities"
+OPDESC["neofetch"]="CLI system information tool"
 OPDESC["amd-ucode"]="Microcode for AMD processor"
 OPDESC["intel-ucode"]="Microcode for Intel processor"
 declare -A OPCHCK
@@ -91,6 +92,7 @@ OPCHCK["dosfstools"]="off"
 OPCHCK["wget"]="off"
 OPCHCK["curl"]="off"
 OPCHCK["ntgs-3g"]="off"
+OPCHCK["neofetch"]="off"
 OPCHCK["amd-ucode"]="off"
 OPCHCK["intel-ucode"]="off"
 
@@ -155,12 +157,13 @@ declare AUDID="none"
 AUDPACK="pulseaudio pulseaudio-alsa pulsemixer pavucontrol"
 
 LIGHTDM="lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings"
-declare DESKLIST="mate xfce lxde deepin gnome kde bspwm"
+declare DESKLIST="mate xfce lxde lxqt deepin gnome kde bspwm"
 declare DESKTYPE="mate"
 declare -A DESKDES
 DESKDES["mate"]="MATE Desktop Environment"
 DESKDES["xfce"]="XFCE4 Desktop Environment"
 DESKDES["lxde"]="Lightweight X11 Desktop Environment"
+DESKDES["lxqt"]="Lightweight X11 Qt Desktop Environment"
 DESKDES["deepin"]="Deepin Desktop Environment"
 DESKDES["gnome"]="GNome Desktop Environment"
 DESKDES["kde"]="KDE Plasma Desktop Environment"
@@ -169,6 +172,7 @@ declare -A DESKPAK
 DESKPAK["mate"]="$LIGHTDM mate mate-extra"
 DESKPAK["xfce"]="lxdm xfce4 xfce4-goodies"
 DESKPAK["lxde"]="lxde"
+DESKPAK["lxqt"]="$LIGHTDM lightdm-webkit-theme-litarvan lxqt lxqt-themes breeze-icons xscreensaver"
 DESKPAK["deepin"]="$LIGHTDM deepin deepin-kwin"
 DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
 DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
@@ -671,18 +675,24 @@ GenDesktopScript() {
 	printf "pacman --noconfirm -S ${DESKPAK[$DESKTYPE]}\n" >> $CHROOTFILE
 	printf "[ \$? -ne 0 ] && PauseError 'Install [$DESKTYPE...] incomplete'\n" >> $CHROOTFILE
 	if [ "$DESKTYPE" == "mate" ]; then
-		printf "sed -i 's/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
+		printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
 		printf "systemctl enable lightdm\n" >> $CHROOTFILE
 	elif [ "$DESKTYPE" == "xfce" ]; then
-		printf "sed -i 's/# session=/c\\session=startxfce4' /etc/lxdm/lxdm.conf\n" >> $CHROOTFILE
+		printf "sed -i '/# session=/c\\session=startxfce4' /etc/lxdm/lxdm.conf\n" >> $CHROOTFILE
 		printf "systemctl enable lxdm\n" >> $CHROOTFILE
 	elif [ "$DESKTYPE" == "deepin" ]; then
-		printf "sed -i 's/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
+		printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
 		printf "systemctl enable lightdm\n" >> $CHROOTFILE
 		printf "pacman --noconfirm -S deepin-{terminal,calculator,clipboard,community-wallpapers}\n" >> $CHROOTFILE
 		printf "[ \$? -ne 0 ] && PauseError 'Install [deepin] incomplete.'\n" >> $CHROOTFILE
 	elif [ "$DESKTYPE" == "lxde" ]; then
 		printf "systemctl enable lxdm\n" >> $CHROOTFILE
+	elif [ "$DESKTYPE" == "lxqt" ]; then
+		printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-webkit2-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
+		printf "sed -i 's/= antergos/= litarvan/g' /etc/lightdm/lightdm-webkit2-greeter.conf\n" >> $CHROOTFILE
+		printf "sed -i 's/icon_theme=oxygen/icon_theme=Adwaita/g' /usr/share/lxqt/lxqt.conf\n" >> $CHROOTFILE
+		printf "sed -i '/icon_theme=/c\\icon_theme=breeze-dark' /home/$SUPERUSR/.config/lxqt/lxqt.conf\n" >> $CHROOTFILE
+		printf "systemctl enable lightdm\n" >> $CHROOTFILE
 	elif [ "$DESKTYPE" == "gnome" ]; then
 		printf "sed -i 's/#Wayland/Wayland/g' /etc/gdm/custom.conf\n" >> $CHROOTFILE
 		printf "systemctl enable gdm\n" >> $CHROOTFILE
@@ -721,9 +731,12 @@ GenRootScript() {
 	printf "PauseError() {\n" >> $CHROOTFILE
 	printf "	local pkey\n" >> $CHROOTFILE
 	printf "	echo '#*--------------------------------------------*'\n" >> $CHROOTFILE
-	printf "	echo \"#  Error : \$1  #\"\n" >> $CHROOTFILE
+	printf "	echo \"#  Warning : \$1  #\"\n" >> $CHROOTFILE
 	printf "	echo '#*--------------------------------------------*'\n" >> $CHROOTFILE
-	printf "	read -p 'Press any key...' pkey\n" >> $CHROOTFILE
+	printf "	read -p 'Do you want to continue?...<Y/n>:' pkey\n" >> $CHROOTFILE
+	printf "	if [ \"$pkey\" == 'N' ] || [ \"$pkey\" =='n' ] ; then\n" >> $CHROOTFILE
+	printf "		exit 2\n" >> $CHROOTFILE
+	printf "	fi\n" >> $CHROOTFILE
 	printf "}\n\n" >> $CHROOTFILE
 	printf "echo 'en_US.UTF-8 UTF-8' > /etc/local.gen\n" >> $CHROOTFILE
 	printf "echo 'en_US ISO-8859-1' >> /etc/local.gen\n" >> $CHROOTFILE
@@ -746,7 +759,11 @@ GenRootScript() {
 	printf "echo 'set number' >> /home/${SUPERUSR}/.vimrc\n" >> $CHROOTFILE
 	printf "chown ${SUPERUSR}:users /home/${SUPERUSR}/.vimrc\n" >> $CHROOTFILE
 	printf "chmod 600 /home/${SUPERUSR}/.vimrc\n" >> $CHROOTFILE
-	printf "echo 'screenfetch' >> /home/${SUPERUSR}/.bash_profile\n" >> $CHROOTFILE
+	if [ "${OPCHCK["neofetch"]}" == "on" ] ; then
+		printf "echo 'neofetch' >> /home/${SUPERUSR}/.bash_profile\n" >> $CHROOTFILE
+	else
+		printf "echo 'screenfetch' >> /home/${SUPERUSR}/.bash_profile\n" >> $CHROOTFILE
+	fi
 	printf "pacman --noconfirm -S grub efibootmgr\n" >> $CHROOTFILE
 	printf "[ \$? -ne 0 ] && PauseError 'Install [grub efibootmgr] incomplete.'\n" >> $CHROOTFILE
 	printf "grub-install --target=x86_64-efi --efi-directory=/boot/EFI --bootloader-id=GRUB\n" >> $CHROOTFILE
