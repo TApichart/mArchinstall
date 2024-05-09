@@ -734,7 +734,7 @@ GenRootScript() {
 	printf "	echo \"#  Warning : \$1  #\"\n" >> $CHROOTFILE
 	printf "	echo '#*--------------------------------------------*'\n" >> $CHROOTFILE
 	printf "	read -p 'Do you want to continue?...<Y/n>:' pkey\n" >> $CHROOTFILE
-	printf "	if [ \"$pkey\" == 'N' ] || [ \"$pkey\" =='n' ] ; then\n" >> $CHROOTFILE
+	printf "	if [ \"\$pkey\" == 'N' ] || [ \"\$pkey\" =='n' ] ; then\n" >> $CHROOTFILE
 	printf "		exit 2\n" >> $CHROOTFILE
 	printf "	fi\n" >> $CHROOTFILE
 	printf "}\n\n" >> $CHROOTFILE
@@ -843,6 +843,8 @@ ConfirmInstall() {
 		$INITFILE
 		MsgBox "Arch Linux Installation" "Install Arch Linux Completely......."
 	fi
+	[ -f $CHROOTFILE ] && rm $CHROOTFILE
+	[ -f $INITFILE ] && rm $INITFILE
 }
 
 
