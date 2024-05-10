@@ -34,10 +34,12 @@ fi
 
 #SWAPSTD="2>&1"
 TZFILE="/tmp/minAI_timezone.tmp"
+KEYMAPFILE="/tmp/minAI_keymap.tmp"
 LSDISKFILE="/tmp/minAI_disk.tmp"
 CHROOTFILE="/root/minAI_chroot.sh"
 INITFILE="/tmp/minAI_init.sh"
 TIMEZONE="Asia/Bangkok"
+KEYMAP="us"
 MIRRORTH="auto"
 HOSTNAME="arch"
 ROOTABLE="disable"
@@ -157,7 +159,7 @@ declare AUDID="none"
 AUDPACK="pulseaudio pulseaudio-alsa pulsemixer pavucontrol"
 
 LIGHTDM="lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings"
-declare DESKLIST="mate xfce lxde lxqt deepin gnome kde bspwm"
+declare DESKLIST="mate xfce lxde lxqt deepin gnome kde bspwm cinnamon"
 declare DESKTYPE="mate"
 declare -A DESKDES
 DESKDES["mate"]="MATE Desktop Environment"
@@ -168,6 +170,7 @@ DESKDES["deepin"]="Deepin Desktop Environment"
 DESKDES["gnome"]="GNome Desktop Environment"
 DESKDES["kde"]="KDE Plasma Desktop Environment"
 DESKDES["bspwm"]="Tiling Window Manager"
+DESKDES["cinnamon"]="Forked from the GNOME desktop"
 declare -A DESKPAK
 DESKPAK["mate"]="$LIGHTDM mate mate-extra"
 DESKPAK["xfce"]="lxdm xfce4 xfce4-goodies"
@@ -177,6 +180,7 @@ DESKPAK["deepin"]="$LIGHTDM deepin deepin-kwin"
 DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
 DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
 DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu alacritty nitrogen"
+DESKPAK["cinnamon"]="$LIGHTDM cinnamon metacity gnome-shell gnome-terminal"
 
 declare NUMDEV=0
 declare -a DSKDEV
@@ -191,7 +195,8 @@ MainMenu() {
 	local initdev="none"
 	[ "$DEVDISK" != "none" ] && initdev="/dev/$DEVDISK"
 	cmd="$STDDIALOG --cancel-button 'Quit' \
-		--title 'Main Menu' --default-item \"${MAINCH}\" --menu 'Select menu:-' 16 62 9 \
+		--title 'Main Menu' --default-item \"${MAINCH}\" --menu 'Select menu:-' 17 62 10 \
+        '0' 'Keyboard Map...............[$KEYMAP]' \
 		'1' 'Timezone ..................[$TIMEZONE]' \
 		'2' 'Server mirror list.........[$MIRRORTH]' \
 		'3' 'Hostname ..................[$HOSTNAME]' \
@@ -714,6 +719,8 @@ GenDesktopScript() {
 		printf "	thunar' >> /home/$SUPERUSR/.config/sxhkd/sxhkdrc\n" >> $CHROOTFILE
 		printf "chown -R $SUPERUSR:users /home/$SUPERUSR/.config\n" >> $CHROOTFILE
 		printf "systemctl enable lightdm\n" >> $CHROOTFILE
+	elif [ "$DESKTOP" == "cinnamon" ] ; then
+		printf "systemctl enable lightdm\n" >> $CHROOTFILE
 	fi
 
 	printf "pacman --noconfirm -S ${VDOPACK[$VDOID]}\n" >> $CHROOTFILE
@@ -991,10 +998,33 @@ InstallArch() {
 	fi
 }
 
+
+KeyboardMap() {
+    local mch
+    local cmd
+    local rs=0
+	local cl=`cat $KEYMAPFILE | wc -l`
+	cmd="$STDDIALOG \
+		--title 'Your timezone' --default-item \"$KEYMAP\" --menu 'Select timezone:-' 24 40 20"
+	for i in $(seq 1 1 $cl); do
+		local line
+		read -r line
+		cmd+=" '$line' ''"
+	done < $KEYMAPFILE
+	mch=`eval $cmd`
+	rs=$?
+	if [ $rs -eq 0 ]; then
+		KEYMAP=$mch
+        loadkeys $mch
+	fi
+}
+
+
 #================================================
 #|          Preparing initail data              |
 #================================================
 [ ! -f $TZFILE ] && timedatectl list-timezones > $TZFILE
+[ ! -f $KEYMAPFILE ] && localectl list-keymaps > $KEYMAPFILE
 
 if [ ! -f $LSDISKFILE ]; then
 	lsblk -l | grep disk > $LSDISKFILE
@@ -1013,6 +1043,8 @@ until [ $RS != 0 ]; do		# if rs==1 then QUIT
 	MainMenu
 	if  [ $RS == 0 ]; then
 		case $MAINCH in
+            0 ) KeyboardMap
+                ;;
 			1 ) TimeZone
 				;;
 			2 ) MsgBox "Information" "The Installation will use Mirror servers from Reflector (Python)......"
