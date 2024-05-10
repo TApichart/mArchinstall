@@ -1079,6 +1079,7 @@ done
 #|                                                       |
 #---------------------------------------------------------
 [ -f $TZFILE ] && rm $TZFILE
+[ -f $KEYMAPFILE ] && rm $KEYMAPFILE
 [ -f $LSDISKFILE ] && rm $LSDISKFILE
 [ -f $CHROOTFILE ] && rm $CHROOTFILE
 [ -f $INITFILE ] && rm $INITFILE
