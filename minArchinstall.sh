@@ -719,7 +719,7 @@ GenDesktopScript() {
 		printf "	thunar' >> /home/$SUPERUSR/.config/sxhkd/sxhkdrc\n" >> $CHROOTFILE
 		printf "chown -R $SUPERUSR:users /home/$SUPERUSR/.config\n" >> $CHROOTFILE
 		printf "systemctl enable lightdm\n" >> $CHROOTFILE
-	elif [ "$DESKTOP" == "cinnamon" ] ; then
+	elif [ "$DESKTYPE" == "cinnamon" ] ; then
 		printf "systemctl enable lightdm\n" >> $CHROOTFILE
 	fi
 
@@ -741,7 +741,8 @@ GenRootScript() {
 	printf "	echo \"#  Warning : \$1  #\"\n" >> $CHROOTFILE
 	printf "	echo '#*--------------------------------------------*'\n" >> $CHROOTFILE
 	printf "	read -p 'Do you want to continue?...<Y/n>:' pkey\n" >> $CHROOTFILE
-	printf "	if [ \"\$pkey\" == 'N' ] || [ \"\$pkey\" =='n' ] ; then\n" >> $CHROOTFILE
+ 	printf "	pkey=\${pkey^^}\n" >> $CHROOTFILE
+	printf "	if [ \"\$pkey\" == 'N' ] ; then\n" >> $CHROOTFILE
 	printf "		exit 2\n" >> $CHROOTFILE
 	printf "	fi\n" >> $CHROOTFILE
 	printf "}\n\n" >> $CHROOTFILE
