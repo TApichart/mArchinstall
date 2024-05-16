@@ -1,15 +1,16 @@
 #!/bin/bash
-# ====================================================================================== #
-# |                   minArchinstall.sh                                                  |
-# | This is a shell script for install Arch Linux in simply way.                         |
-# | Writen by: InvisibleBox                                                              |
-# | Date: Apr,16 2024                                                                    |
-# | Last Modified: May,16 2024                                                           |
-# | License : CC BY                                                                      |
-# |     This license enables reusers to distribute, remix, adapt, and build upon the     |
-# |     material in any medium or format, so long as attribution is given to the creator.|
-# |     The license allows for commercial use. CC BY includes the following elements:    |
-# ====================================================================================== #
+# =============================================================================================== #
+# |                   minArchinstall.sh                                                           |
+# | This is a shell script for install Arch Linux in simply way.                                  |
+# | Writen by: InvisibleBox                                                                       |
+# | Date: Apr,16 2024                                                                             |
+# | Last Modified: May,16 2024                                                                    |
+# | License : CC0 -                                                                               |
+# |     CC0 (aka CC Zero) is a public dedication tool, which enables creators to give up          |
+# |     their copyright and put their works into the worldwide public domain. CC0                 |
+# |     enables reusers to distribute, remix, adapt, and build upon the material in any medium or |
+# |     format, with no conditions.                                                               |
+# =============================================================================================== #
 ping -c 1 www.google.com
 if [ "$?" -eq 2 ]; then
 	printf "Internet Connection........\033[1;31mE.R.R.O.R\033[0m...!\n"
@@ -1091,3 +1092,4 @@ done
 [ -f $INITFILE ] && rm $INITFILE
 
 exit 0
+	
