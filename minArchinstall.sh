@@ -1,10 +1,15 @@
 #!/bin/bash
-# ============================================================================
-# |                   minArchinstall.sh                                      |
-# | This is a shell script for install Arch Linux in simply way.             |
-# | Writen by: T.Apichart                                     	             |
-# | Date: Apr,16 2024                                                        |
-# ============================================================================
+# ====================================================================================== #
+# |                   minArchinstall.sh                                                  |
+# | This is a shell script for install Arch Linux in simply way.                         |
+# | Writen by: InvisibleBox                                                              |
+# | Date: Apr,16 2024                                                                    |
+# | Last Modified: May,16 2024                                                           |
+# | License : CC BY                                                                      |
+# |     This license enables reusers to distribute, remix, adapt, and build upon the     |
+# |     material in any medium or format, so long as attribution is given to the creator.|
+# |     The license allows for commercial use. CC BY includes the following elements:    |
+# ====================================================================================== #
 ping -c 1 www.google.com
 if [ "$?" -eq 2 ]; then
 	printf "Internet Connection........\033[1;31mE.R.R.O.R\033[0m...!\n"
@@ -86,7 +91,7 @@ OPCHCK["git"]="off"
 OPCHCK["zip"]="on"
 OPCHCK["unzip"]="on"
 OPCHCK["sysstat"]="off"
-OPCHK["perf"]="off"
+OPCHCK["perf"]="off"
 OPCHCK["nano"]="off"
 OPCHCK["os-prober"]="off"
 OPCHCK["mtools"]="off"
@@ -741,8 +746,8 @@ GenRootScript() {
 	printf "	echo \"#  Warning : \$1  #\"\n" >> $CHROOTFILE
 	printf "	echo '#*--------------------------------------------*'\n" >> $CHROOTFILE
 	printf "	read -p 'Do you want to continue?...<Y/n>:' pkey\n" >> $CHROOTFILE
- 	printf "	pkey=\${pkey^^}\n" >> $CHROOTFILE
-	printf "	if [ \"\$pkey\" == 'N' ] ; then\n" >> $CHROOTFILE
+    printf "    pkey=\${pkey^^}\n" >> $CHROOTFILE
+	printf "	if [ \"\$pkey\" == 'N' ]; then\n" >> $CHROOTFILE
 	printf "		exit 2\n" >> $CHROOTFILE
 	printf "	fi\n" >> $CHROOTFILE
 	printf "}\n\n" >> $CHROOTFILE
@@ -934,7 +939,7 @@ ArchDesktop() {
 	local rs=0
 	local initch='swap'
 	cmd="$STDDIALOG --no-cancel \
-		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 15 80 6"
+		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 16 80 7"
 	for ep in $DESKLIST ; do
 		cmd+=" '$ep' '${DESKDES[$ep]}'"
 	done
@@ -1022,7 +1027,7 @@ KeyboardMap() {
 
 
 #================================================
-#|          Preparing initail data              |
+#|          Preparing initial data              |
 #================================================
 [ ! -f $TZFILE ] && timedatectl list-timezones > $TZFILE
 [ ! -f $KEYMAPFILE ] && localectl list-keymaps > $KEYMAPFILE
