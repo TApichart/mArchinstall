@@ -4,7 +4,7 @@
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
-# | Last Modified: May,16 2024                                                                    |
+# | Last Modified: May,17 2024                                                                    |
 # | License : CC0 -                                                                               |
 # |     CC0 (aka CC Zero) is a public dedication tool, which enables creators to give up          |
 # |     their copyright and put their works into the worldwide public domain. CC0                 |
@@ -244,9 +244,11 @@ Hostname() {
 	local mch
 	local cmd
 	local rs
+    tput cvvis
 	cmd="$STDDIALOG --max-input 25 \
 		--title 'Define Hostname' --inputbox 'Enter hostname:-' 7 40 '$HOSTNAME'"
 	mch=`eval $cmd`
+    tput civis
 	rs=$?
 	if [ $rs -eq 0 ] ; then
 		local len=${#mch}
@@ -315,9 +317,11 @@ SuperUserName() {
 	local mch
 	local cmd
 	local rs
+    tput cvvis
 	cmd="$STDDIALOG --max-input 25 \
 		--title 'Define user name for Super User' --inputbox 'User name as Admin user:-' 7 40 '$SUPERUSR'"
 	mch=`eval $cmd`
+    tput civis
 	rs=$?
 	if [ $rs -eq 0 ] ; then
 		SUPERUSR=$mch
@@ -335,10 +339,12 @@ SuperPassword() {
 	else
 		initpass="$SUPERPAS"
 	fi
+    tput cvvis
 	cmd="$STDDIALOG --insecure --max-input 30 \
 		--title 'Set password for [$SUPERUSR]' 
 		--passwordbox 'Password should be at least 8 characters long with 1 uppercase, and 1 lowercase:-' 8 45 '$initpass' "
 	mch=`eval $cmd`
+    tput civis
 	rs=$?
 	if [ $rs -eq 0 ] ; then
 		local ck=$(CheckPassword "$mch")
@@ -359,11 +365,13 @@ RootPassword() {
 	local cmd
 	local rs
 	local initpass=$ROOTPASS
+    tput cvvis
 	cmd="$STDDIALOG --insecure --max-input 30 \
 		--title \"Set root's password\" --passwordform \"Enter rot's password:-\" 10 48 3 \
 		'Password : ' 1 1 '$initpass' 1 18 23 0 \
 		'Retry password : ' 2 1 '$initpass' 2 18 23 0 "
 	mch=`eval $cmd`
+    tput civis
 	rs=$?
 	if [ $rs -eq 0 ] ; then
 		for i in $mch; do
@@ -1046,6 +1054,7 @@ fi
 #------------------------------------------------
 #=               Start main menu                =
 #------------------------------------------------
+tput civis
 until [ $RS != 0 ]; do		# if rs==1 then QUIT
 	MainMenu
 	if  [ $RS == 0 ]; then
@@ -1078,6 +1087,7 @@ until [ $RS != 0 ]; do		# if rs==1 then QUIT
 		esac
 	fi
 done
+tput cvvis
 
 
 #---------------------------------------------------------
@@ -1092,4 +1102,3 @@ done
 [ -f $INITFILE ] && rm $INITFILE
 
 exit 0
-	
