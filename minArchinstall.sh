@@ -4,7 +4,7 @@
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
-# | Last Modified: May,17 2024                                                                    |
+# | Last Modified: May,23 2024                                                                    |
 # | License : CC0 -                                                                               |
 # |     CC0 (aka CC Zero) is a public dedication tool, which enables creators to give up          |
 # |     their copyright and put their works into the worldwide public domain. CC0                 |
@@ -29,16 +29,15 @@ WaitReflector() {
 	done
 }
 
-#----------------------------------------------------------#
-#  If there is not a CLI-dialog then installing by pacman  #
-#----------------------------------------------------------#
-WaitReflector
-if [ ! -f /usr/bin/dialog ]; then
+#------------------------------------------------------------#
+#  If there is not a CLI-whiptail then installing by pacman  #
+#------------------------------------------------------------#
+if [ ! -f /usr/bin/whiptail ]; then
     pacman -Sy
-    pacman --noconfirm -S dialog
+    pacman --noconfirm -S whiptail
 fi
 
-#SWAPSTD="2>&1"
+SWAPSTD="3>&1 1>&2 2>&3"
 TZFILE="/tmp/minAI_timezone.tmp"
 KEYMAPFILE="/tmp/minAI_keymap.tmp"
 LSDISKFILE="/tmp/minAI_disk.tmp"
@@ -67,7 +66,7 @@ declare -a MNTDES=( "/" "/ /home" "/ /home /tmp /var" )
 SWAPID=0
 declare -a SWAPDES=( "no swap" "swapfile" "swap partition" )
 
-declare CLILIST=""
+declare CLILIST="htop zip unzip"
 OPTIONS="htop git zip unzip sysstat perf nano os-prober mtools dosfstools wget curl ntfs-3g neofetch amd-ucode intel-ucode"
 declare -A OPDESC
 OPDESC["htop"]="Interactive process viewer"
@@ -193,7 +192,7 @@ declare -a DSKDEV
 declare -a DSKSIZ
 
 BACKTITLE="minArchinstall version 1.0.0 :  Bash Shell Script for intalling Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
-STDDIALOG="dialog --stdout --backtitle \"$BACKTITLE\""
+STDDIALOG="whiptail --backtitle \"$BACKTITLE\""
 
 MainMenu() {
 	local mch
@@ -201,7 +200,7 @@ MainMenu() {
 	local initdev="none"
 	[ "$DEVDISK" != "none" ] && initdev="/dev/$DEVDISK"
 	cmd="$STDDIALOG --cancel-button 'Quit' \
-		--title 'Main Menu' --default-item \"${MAINCH}\" --menu 'Select menu:-' 17 62 10 \
+		--title 'Main Menu' --default-item \"${MAINCH}\" --menu 'Select menu:-' 18 62 10 \
         '0' 'Keyboard Map...............[$KEYMAP]' \
 		'1' 'Timezone ..................[$TIMEZONE]' \
 		'2' 'Server mirror list.........[$MIRRORTH]' \
@@ -211,7 +210,7 @@ MainMenu() {
 		'6' 'Optional packages .........[as your wish]' \
 		'7' 'Server packages............[as your wish]' \
 		'8' 'Disk partitions............[$initdev]' \
-		'9' '[...Next step to Install...]' "
+		'9' '[...Next step to Install...]' ${SWAPSTD}"
 	mch=`eval $cmd`
 	RS=$?
 	if [ $RS -eq 0 ]; then
@@ -226,12 +225,13 @@ TimeZone() {
 	local rs
 	local cl=`cat $TZFILE | wc -l`
 	cmd="$STDDIALOG \
-		--title 'Your timezone' --default-item \"$TIMEZONE\" --menu 'Select timezone:-' 24 40 20"
+		--title 'Your timezone' --default-item \"$TIMEZONE\" --menu 'Select timezone:-' 24 43 16"
 	for i in $(seq 1 1 $cl); do
 		local line
 		read -r line
 		cmd+=" '$line' ''"
 	done < $TZFILE
+	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs -eq 0 ]; then
@@ -245,8 +245,8 @@ Hostname() {
 	local cmd
 	local rs
     tput cvvis
-	cmd="$STDDIALOG --max-input 25 \
-		--title 'Define Hostname' --inputbox 'Enter hostname:-' 7 40 '$HOSTNAME'"
+	cmd="$STDDIALOG \
+		--title 'Define Hostname' --inputbox 'Enter hostname:-' 7 40 '$HOSTNAME' ${SWAPSTD}"
 	mch=`eval $cmd`
     tput civis
 	rs=$?
@@ -270,7 +270,7 @@ LinuxKernel() {
 		'linux' 'Stable-Vanilla Linux kernel and modules, with patches' \
 		'linux-lts' 'Long-term support(LTS)' \
 		'linux-hardened' 'A security-focused Linux kernel' \
-		'linux-zen' 'Result of a collaborative effort of kernel hackers' "
+		'linux-zen' 'Result of a collaborative effort of kernel hackers' ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs == 0 ] ; then
@@ -318,8 +318,8 @@ SuperUserName() {
 	local cmd
 	local rs
     tput cvvis
-	cmd="$STDDIALOG --max-input 25 \
-		--title 'Define user name for Super User' --inputbox 'User name as Admin user:-' 7 40 '$SUPERUSR'"
+	cmd="$STDDIALOG  \
+		--title 'Define user name for Super User' --inputbox 'User name as Admin user:-' 7 40 '$SUPERUSR' ${SWAPSTD}"
 	mch=`eval $cmd`
     tput civis
 	rs=$?
@@ -340,9 +340,9 @@ SuperPassword() {
 		initpass="$SUPERPAS"
 	fi
     tput cvvis
-	cmd="$STDDIALOG --insecure --max-input 30 \
+	cmd="$STDDIALOG  \
 		--title 'Set password for [$SUPERUSR]' 
-		--passwordbox 'Password should be at least 8 characters long with 1 uppercase, and 1 lowercase:-' 8 45 '$initpass' "
+		--passwordbox 'Password should be at least 8 characters long with 1 uppercase, and 1 lowercase:-' 8 45 '$initpass' ${SWAPSTD}"
 	mch=`eval $cmd`
     tput civis
 	rs=$?
@@ -360,36 +360,25 @@ SuperPassword() {
 
 RootPassword() {
 	local mch
-	local -a pswd=( "none" "diff" )
 	local idx=0
 	local cmd
 	local rs
 	local initpass=$ROOTPASS
     tput cvvis
-	cmd="$STDDIALOG --insecure --max-input 30 \
-		--title \"Set root's password\" --passwordform \"Enter rot's password:-\" 10 48 3 \
-		'Password : ' 1 1 '$initpass' 1 18 23 0 \
-		'Retry password : ' 2 1 '$initpass' 2 18 23 0 "
+	cmd="$STDDIALOG  \
+		--title \"Set root's password\" --passwordbox \"Enter password:-\" 11 48 '$initpass' ${SWAPSTD}"
 	mch=`eval $cmd`
     tput civis
 	rs=$?
 	if [ $rs -eq 0 ] ; then
-		for i in $mch; do
-			pswd[$idx]=$i
-			idx=`expr $idx + 1`
-		done
-		if [ "${pswd[0]}" != "${pswd[1]}" ]; then
-			MsgBox "Error in passwords" "Those passwords did not match. try again..."
+		local ck=$(CheckPassword "$mch")
+		if [ "$ck" == "Valid password" ]; then
+			ROOTPASS="$mch"
+			MsgBox "Accept Password" "$ck"
+			ROOTABLE="enable"
 		else
-			local ck=$(CheckPassword "${pswd[0]}")
-			if [ "$ck" == "Valid password" ]; then
-				ROOTPASS="${pswd[0]}"
-				MsgBox "Accept Password" "$ck"
-				ROOTABLE="enable"
-			else
-				MsgBox "Error in Password" "$ck"
-				ROOTABLE="disable"
-			fi
+			MsgBox "Error in Password" "$ck"
+			ROOTABLE="disable"
 		fi
 	fi
 }
@@ -401,9 +390,9 @@ RootSelect() {
 	local rs=0
 	local initch="$ROOTABLE"
 	cmd="$STDDIALOG --cancel-button 'Back' \
-		--title 'Setting root user' --default-item \"$initch\" --menu 'Select menu:-' 15 65 3 \
+		--title 'Setting root user' --default-item \"$initch\" --menu 'Select menu:-' 11 65 3 \
 		'disable'   'Disable - root can not login' \
-		'enable'    'Enable - set password for root' "
+		'enable'    'Enable - set password for root' ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs -eq 0 ] ; then
@@ -446,10 +435,10 @@ UserAccout() {
 		fi
 
 		cmd="$STDDIALOG --cancel-button 'Back' \
-			--title 'User account manament' --default-item \"$initch\" --menu 'Select menu:-' 15 65 3 \
+			--title 'User account manament' --default-item \"$initch\" --menu 'Select menu:-' 11 65 3 \
 			'root'   'Set password for root User........[$initrt]' \
 			'user'   'Define user name for Super User...[$SUPERUSR]' \
-			'passwd' 'Set password for Super User.......[$passval]' "
+			'passwd' 'Set password for Super User.......[$passval]' ${SWAPSTD}"
 		mch=`eval $cmd`
 		rs=$?
 		if [ $rs -eq 0 ] ; then
@@ -478,8 +467,10 @@ OptionalCLI(){
 		local pc=${OPCHCK["$ep"]}
 		cmd+=" '$ep' '$pn' '$pc'"
 	done
+	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
+    mch=`echo $mch | sed 's/"//g'`
 	if [ $rs -eq 0 ]; then
 		for ep in $OPTIONS ; do
 			OPCHCK["$ep"]='off'
@@ -503,8 +494,10 @@ ServerPackages(){
 		local pc=${SRVCHK["$ep"]}
 		cmd+=" '$ep' '$pn' '$pc'"
 	done
+	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
+    mch=`echo $mch | sed 's/"//g'`
 	if [ $rs -eq 0 ]; then
 		for ep in $OPTSERV ; do
 			SRVCHK["$ep"]='off'
@@ -528,6 +521,7 @@ SelectDevDisk() {
 	for i in `seq 1 1 $NUMDEV` ; do
 		cmd+=" '${DSKDEV[$i]}' '${DSKSIZ[$i]}'"
 	done
+	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs -eq 0 ]; then
@@ -545,6 +539,7 @@ SwapType() {
 	for i in `seq 0 1 2` ; do
 		cmd+=" '$i' '${SWAPDES[$i]}'"
 	done
+	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs -eq 0 ]; then
@@ -562,6 +557,7 @@ MountVolume() {
 	for i in `seq 0 1 2` ; do
 		cmd+=" '$i' '${MNTDES[$i]}'"
 	done
+	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs -eq 0 ]; then
@@ -580,7 +576,7 @@ DiskPartition() {
 			--title 'Disk partitions' --default-item '$initch' --menu 'Warning...!\nAll data in the target disk will be erased :-' 15 60 8 \
 			'swap'  'Swap space and paging...[${SWAPDES[$SWAPID]}]' \
 			'dev'   'Disk device to install..[$DEVDISK]' \
-			'mount' 'Mount volume ...........[ ${MNTDES[$MNTTID]} ]' "
+			'mount' 'Mount volume ...........[ ${MNTDES[$MNTTID]} ]' ${SWAPSTD}"
 		mch=`eval $cmd`
 		rs=$?
 		if [ $rs -eq 0 ]; then
@@ -755,7 +751,7 @@ GenRootScript() {
 	printf "	echo \"#  Warning : \$1  #\"\n" >> $CHROOTFILE
 	printf "	echo '#*--------------------------------------------*'\n" >> $CHROOTFILE
 	printf "	read -p 'Do you want to continue?...<Y/n>:' pkey\n" >> $CHROOTFILE
-    printf "    pkey=\${pkey^^}\n" >> $CHROOTFILE
+    printf "	pkey=\${pkey^^}\n" >> $CHROOTFILE
 	printf "	if [ \"\$pkey\" == 'N' ]; then\n" >> $CHROOTFILE
 	printf "		exit 2\n" >> $CHROOTFILE
 	printf "	fi\n" >> $CHROOTFILE
@@ -853,10 +849,10 @@ ConfirmInstall() {
 	local cmd
 	local rs
 	cmd="$STDDIALOG \
-		--yes-label 'Manual'
-		--no-label 'Run now'
+		--yes-button 'Manual'
+		--no-button 'Run now'
 		--title 'Install Arch linux' \
-		--yesno 'Run the script by your hand manually...?' 8 48 "
+		--yesno 'Run the script by your hand manually...?' 8 48 ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs -eq 0 ] ; then
@@ -876,7 +872,7 @@ ArchCLI() {
 	local rs=0
 	cmd="$STDDIALOG \
 		--title 'Arch Linux Installation' \
-		--yesno 'Warning...!\nAll data in /dev/$DEVDISK will be erased, then install...' 7 40 "
+		--yesno 'Warning...!\nAll data in /dev/$DEVDISK will be erased, then install...' 7 40 ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs -eq 0 ]; then
@@ -891,10 +887,11 @@ SetVGA() {
 	local cmd
 	local rs=0
 	cmd="$STDDIALOG \
-		--title 'VGA Configuration' --default-item '$VDOID' --menu 'Video setting:-' 15 80 8"
+		--title 'VGA Configuration' --default-item '$VDOID' --menu 'Video setting:-' 16 80 8"
 	for i in `seq 1 1 6` ; do
 		cmd+=" '$i' '${VDODES[$i]}'"
 	done
+	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	[ $rs -eq 0 ] && VDOID=$mch
@@ -906,9 +903,9 @@ SetAudio() {
 	local cmd
 	local rs=0
 	cmd="$STDDIALOG \
-		--title 'Sound/Audio Setting' --default-item '$AUDID' --menu 'Sound setting:-' 9 60 2 \
+		--title 'Sound/Audio Setting' --default-item '$AUDID' --menu 'Sound setting:-' 10 60 2 \
 		'none'        'Disable/No sound' \
-		'pulseaudio'  'A featureful, general-purpose sound server' "
+		'pulseaudio'  'A featureful, general-purpose sound server' ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	[ $rs -eq 0 ] && AUDID="$mch"
@@ -927,8 +924,10 @@ Xadditional() {
 		local pc=${XPKCHK["$ep"]}
 		cmd+=" '$ep' '$pn' '$pc'"
 	done
+	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
+    mch=`echo $mch | sed 's/"//g'`
 	if [ $rs -eq 0 ]; then
 		for ep in $XPKLIST ; do
 			XPKCHK["$ep"]='off'
@@ -946,12 +945,13 @@ ArchDesktop() {
 	local num=`echo "$DESKLIST" | wc -w`
 	local cmd
 	local rs=0
-	local initch='swap'
-	cmd="$STDDIALOG --no-cancel \
-		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 16 80 7"
+	local initch='mate'
+	cmd="$STDDIALOG --nocancel \
+		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 17 80 9"
 	for ep in $DESKLIST ; do
 		cmd+=" '$ep' '${DESKDES[$ep]}'"
 	done
+	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	[ $rs -eq 0 ] && DESKTYPE=$mch
@@ -962,14 +962,14 @@ ArchGUI() {
 	local mch
 	local cmd
 	local rs=0
-	local initch='swap'
+	local initch='V'
 	while [ $rs -eq 0 ]; do
-		cmd="$STDDIALOG --ok-label 'Change' --cancel-button 'Install' \
-			--title 'Graphical desktop environment' --default-item '$initch' --menu 'Configuration setting:-' 11 80 5 \
+		cmd="$STDDIALOG --ok-button 'Change' --cancel-button 'Install' \
+			--title 'Graphical desktop environment' --default-item '$initch' --menu 'Configuration setting:-' 12 80 4 \
 			'V' 'Video Display.........[${VDODES[$VDOID]}]' \
 			'S' 'Sound Audio...........[$AUDID]' \
 			'A' 'Additional packages...[as your wish]' \
-			'D' 'Desktop Environment...[$DESKTYPE]' "
+			'D' 'Desktop Environment...[$DESKTYPE]' ${SWAPSTD}"
 		mch=`eval $cmd`
 		rs=$?
 		if [ $rs -eq 0 ]; then
@@ -998,9 +998,9 @@ InstallArch() {
 	local cmd
 	local rs=0
 	cmd="$STDDIALOG --cancel-button 'Back' \
-		--title 'Arch Linux Installation' --default-item 'cli' --menu 'Warning...!\nAll data in /dev/$DEVDISK will be erased :-' 10 50 3 \
+		--title 'Arch Linux Installation' --default-item 'cli' --menu 'Warning...!\nAll data in /dev/$DEVDISK will be erased :-' 10 50 2 \
 		'cli'  'Command Line Interface / No Graphical' \
-		'gui'  'Graphical User Interface' "
+		'gui'  'Graphical User Interface' ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs -eq 0 ]; then
@@ -1020,12 +1020,13 @@ KeyboardMap() {
     local rs=0
 	local cl=`cat $KEYMAPFILE | wc -l`
 	cmd="$STDDIALOG \
-		--title 'Your timezone' --default-item \"$KEYMAP\" --menu 'Select timezone:-' 24 40 20"
+		--title 'Your KeyMap' --default-item \"$KEYMAP\" --menu 'Select keymap:-' 24 43 16"
 	for i in $(seq 1 1 $cl); do
 		local line
 		read -r line
 		cmd+=" '$line' ''"
 	done < $KEYMAPFILE
+	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs -eq 0 ]; then
