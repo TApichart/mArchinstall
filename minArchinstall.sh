@@ -11,6 +11,12 @@
 # |     enables reusers to distribute, remix, adapt, and build upon the material in any medium or |
 # |     format, with no conditions.                                                               |
 # =============================================================================================== #
+MINAI_LOCK="/var/minAI_LOCK.lck"
+
+[ -f $MINAI_LOCK ] && echo "It has already another process of running.....!"
+touch $MINAI_LOCK
+echo $$ >> $MINAI_LOCK
+
 ping -c 1 www.google.com
 if [ "$?" -eq 2 ]; then
 	printf "Internet Connection........\033[1;31mE.R.R.O.R\033[0m...!\n"
@@ -964,7 +970,7 @@ ArchGUI() {
 	local rs=0
 	local initch='V'
 	while [ $rs -eq 0 ]; do
-		cmd="$STDDIALOG --ok-button 'Change' --cancel-button 'Install' \
+		cmd="$STDDIALOG --ok-button 'Setting' --cancel-button 'Install' \
 			--title 'Graphical desktop environment' --default-item '$initch' --menu 'Configuration setting:-' 12 80 4 \
 			'V' 'Video Display.........[${VDODES[$VDOID]}]' \
 			'S' 'Sound Audio...........[$AUDID]' \
@@ -1101,5 +1107,6 @@ tput cvvis
 [ -f $LSDISKFILE ] && rm $LSDISKFILE
 [ -f $CHROOTFILE ] && rm $CHROOTFILE
 [ -f $INITFILE ] && rm $INITFILE
+[ -f $MINAI_LOCK ] && rm $MINAI_LOCK
 
 exit 0
