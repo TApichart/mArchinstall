@@ -13,9 +13,14 @@
 # =============================================================================================== #
 MINAI_LOCK="/var/minAI_LOCK.lck"
 
-[ -f $MINAI_LOCK ] && echo "It has already another process of running.....!"
-touch $MINAI_LOCK
-echo $$ >> $MINAI_LOCK
+if [ -f $MINAI_LOCK ] ; then
+	bpid=`cat $MINAI_LOCK`
+	echo "There is another process running at PID [$bpid].....!"
+	exit 5
+else
+	touch $MINAI_LOCK
+	echo $$ >> $MINAI_LOCK
+fi
 
 ping -c 1 www.google.com
 if [ "$?" -eq 2 ]; then
