@@ -18,8 +18,8 @@ if [ -f $MINAI_LOCK ] ; then
 	echo "There is another process running at PID [$bpid].....!"
 	exit 5
 else
-	touch $MINAI_LOCK
-	echo $$ >> $MINAI_LOCK
+#	touch $MINAI_LOCK
+	echo $$ > $MINAI_LOCK
 fi
 
 ping -c 1 www.google.com
@@ -48,7 +48,16 @@ if [ ! -f /usr/bin/whiptail ]; then
     pacman --noconfirm -S whiptail
 fi
 
+#--------------------------------------------------#
+#  git module - for installl additional            #
+#--------------------------------------------------#
+GITCLONE="git clone https://aur.archlinux.org"
+PERLLINUX="perl-linux-desktopfiles"
+OBMENU="obmenu-generator"
+PKGMAKE="makepkg -s"
+#--------------------------------------------------#
 SWAPSTD="3>&1 1>&2 2>&3"
+RESOLUTION="1920x1080"
 TZFILE="/tmp/minAI_timezone.tmp"
 KEYMAPFILE="/tmp/minAI_keymap.tmp"
 LSDISKFILE="/tmp/minAI_disk.tmp"
@@ -127,7 +136,7 @@ SRVCHK["apache"]="off"
 SRVCHK["mysql"]="off"
 SRVCHK["postgresql"]="off"
 
-declare XPKLIST="vlc firefox libreoffice mousepad leafpad notepadqq gimp inkscape darktable xdg-user-dirs gvfs"
+declare XPKLIST="vlc firefox libreoffice mousepad leafpad geany notepadqq gimp inkscape darktable xdg-user-dirs gvfs"
 declare XPACKS="vlc firefox mousepad xdg-user-dirs"
 declare XFIXPK="noto-fonts"
 declare -A XPKDES
@@ -136,6 +145,7 @@ XPKDES["firefox"]="Firefox Web Browser"
 XPKDES["libreoffice"]="LibreOffice - Office suit"
 XPKDES["mousepad"]="MousePad text editor"
 XPKDES["leafpad"]="A notepad clone for GTK+ 2.0"
+XPKDES["geany"]="Geany - Fast and lightweidht IDE"
 XPKDES["xdg-user-dirs"]="Extra - Manage user directories"
 XPKDES["notepadqq"]="Notepad++ text editor"
 XPKDES["gimp"]="GNU Image Manipulation Program"
@@ -148,6 +158,7 @@ XPKCHK["firefox"]="on"
 XPKCHK["libreoffice"]="off"
 XPKCHK["mousepad"]="on"
 XPKCHK["leafpad"]="off"
+XPKCHK["geany"]="off"
 XPKCHK["notepadqq"]="off"
 XPKCHK["gimp"]="off"
 XPKCHK["inkscape"]="off"
@@ -175,28 +186,30 @@ declare AUDID="none"
 AUDPACK="pulseaudio pulseaudio-alsa pulsemixer pavucontrol"
 
 LIGHTDM="lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings"
-declare DESKLIST="mate xfce lxde lxqt deepin gnome kde bspwm cinnamon"
+declare DESKLIST="mate xfce cinnamon lxde lxqt deepin gnome kde bspwm openbox"
 declare DESKTYPE="mate"
 declare -A DESKDES
 DESKDES["mate"]="MATE Desktop Environment"
 DESKDES["xfce"]="XFCE4 Desktop Environment"
+DESKDES["cinnamon"]="Forked from the GNOME desktop"
 DESKDES["lxde"]="Lightweight X11 Desktop Environment"
 DESKDES["lxqt"]="Lightweight X11 Qt Desktop Environment"
 DESKDES["deepin"]="Deepin Desktop Environment"
 DESKDES["gnome"]="GNome Desktop Environment"
 DESKDES["kde"]="KDE Plasma Desktop Environment"
 DESKDES["bspwm"]="Tiling Window Manager"
-DESKDES["cinnamon"]="Forked from the GNOME desktop"
+DESKDES["openbox"]="Highly configurable and lightweight X11 window manager"
 declare -A DESKPAK
 DESKPAK["mate"]="$LIGHTDM mate mate-extra"
 DESKPAK["xfce"]="lxdm xfce4 xfce4-goodies"
+DESKPAK["cinnamon"]="$LIGHTDM cinnamon metacity gnome-shell gnome-terminal"
 DESKPAK["lxde"]="lxde"
 DESKPAK["lxqt"]="$LIGHTDM lightdm-webkit-theme-litarvan lxqt lxqt-themes breeze-icons xscreensaver"
 DESKPAK["deepin"]="$LIGHTDM deepin deepin-kwin"
 DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
 DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
-DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu alacritty nitrogen"
-DESKPAK["cinnamon"]="$LIGHTDM cinnamon metacity gnome-shell gnome-terminal"
+DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitrogen thunar"
+DESKPAK["openbox"]="$LIGHTDM openbox obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
 
 declare NUMDEV=0
 declare -a DSKDEV
@@ -696,54 +709,140 @@ GenMountScript() {
 
 
 GenDesktopScript() {
+	local mONITOR1="Section \\\\\"Monitor\\\\\"
+	Identifier \\\\\"Virtual-1\\\\\"
+	Option \\\\\"PreferredMode\\\\\" \\\\\"$RESOLUTION\\\\\"
+	Option \\\\\"Primary\\\\\" \\\\\"1\\\\\"
+EndSection"
+	local sUPERHOME="/home/$SUPERUSR"
+	local uSRCFG="$sUPERHOME/.config"
+	local bGDIR="/usr/share/backgrounds/archlinux"
+	local bGSAVED="[xin_-1]
+file=$bGDIR/awesome.png
+mode=4
+bgcolor=#000000
+"
+	local nITROGEN="[geometry]
+posx=0
+posy=0
+sizex=516
+sizey=500
+
+[nitrogen]
+view=icon
+recurse=true
+sort=alpha
+icon_caps=false
+dirs=$bGDIR;
+"
+	local lIGHTBG="sed -i '/#background=/c\\\\\\\\background=/usr/share/backgrounds/archlinux/geowaves.png' /etc/lightdm/lightdm-gtk-greeter.conf"
+
 	printf "\npacman --noconfirm -S xorg network-manager-applet archlinux-wallpaper\n">> $CHROOTFILE
 	printf "[ \$? -ne 0 ] && PauseError 'Install [xorg...] incomplete'\n" >> $CHROOTFILE
 	printf "pacman --noconfirm -S ${DESKPAK[$DESKTYPE]}\n" >> $CHROOTFILE
 	printf "[ \$? -ne 0 ] && PauseError 'Install [$DESKTYPE...] incomplete'\n" >> $CHROOTFILE
-	if [ "$DESKTYPE" == "mate" ]; then
-		printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
-		printf "systemctl enable lightdm\n" >> $CHROOTFILE
-	elif [ "$DESKTYPE" == "xfce" ]; then
-		printf "sed -i '/# session=/c\\session=startxfce4' /etc/lxdm/lxdm.conf\n" >> $CHROOTFILE
-		printf "systemctl enable lxdm\n" >> $CHROOTFILE
-	elif [ "$DESKTYPE" == "deepin" ]; then
-		printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
-		printf "systemctl enable lightdm\n" >> $CHROOTFILE
-		printf "pacman --noconfirm -S deepin-{terminal,calculator,clipboard,community-wallpapers}\n" >> $CHROOTFILE
-		printf "[ \$? -ne 0 ] && PauseError 'Install [deepin] incomplete.'\n" >> $CHROOTFILE
-	elif [ "$DESKTYPE" == "lxde" ]; then
-		printf "systemctl enable lxdm\n" >> $CHROOTFILE
-	elif [ "$DESKTYPE" == "lxqt" ]; then
-		printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-webkit2-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
-		printf "sed -i 's/= antergos/= litarvan/g' /etc/lightdm/lightdm-webkit2-greeter.conf\n" >> $CHROOTFILE
-		printf "sed -i 's/icon_theme=oxygen/icon_theme=Adwaita/g' /usr/share/lxqt/lxqt.conf\n" >> $CHROOTFILE
-		printf "sed -i '/icon_theme=/c\\icon_theme=breeze-dark' /home/$SUPERUSR/.config/lxqt/lxqt.conf\n" >> $CHROOTFILE
-		printf "systemctl enable lightdm\n" >> $CHROOTFILE
-	elif [ "$DESKTYPE" == "gnome" ]; then
-		printf "sed -i 's/#Wayland/Wayland/g' /etc/gdm/custom.conf\n" >> $CHROOTFILE
-		printf "systemctl enable gdm\n" >> $CHROOTFILE
-	elif [ "$DESKTYPE" == "kde" ]; then
-		printf "systemctl enable sddm\n" >> $CHROOTFILE
-	elif [ "$DESKTYPE" == "bspwm" ] ; then
-		printf "mkdir -p /home/$SUPERUSR/.config/{bspwm,sxhkd,polybar,picom}\n" >> $CHROOTFILE
-		printf "cp /usr/share/doc/bspwm/examples/bspwmrc /home/$SUPERUSR/.config/bspwm\n" >> $CHROOTFILE
-		printf "cp /usr/share/doc/bspwm/examples/sxhkdrc /home/$SUPERUSR/.config/sxhkd\n" >> $CHROOTFILE
-		printf "cp /etc/xdg/picom.conf /home/$SUPERUSR/.config/picom\n" >> $CHROOTFILE
-		printf "cp /etc/polybar/config.ini /home/$SUPERUSR/.config/polybar\n" >> $CHROOTFILE
-		printf "chmod +x /home/$SUPERUSR/.config/bwpwmrc\n" >> $CHROOTFILE
-		printf "echo 'sxhkd &\n" >> $CHROOTFILE
-		printf "picom --config ~/.config/picom/picom.conf &\n" >> $CHROOTFILE
-		printf "nitrogen --restore &\n" >> $CHROOTFILE
-		printf "polybar &' >> /home/$SUPERUSR/.config/bspwm/bspwmrc\n" >> $CHROOTFILE
-		printf "sed -i 's/urxvt/alacritty/g' /home/$SUPERUSR/.config/sxhkd/sxhkdrc\n" >> $CHROOTFILE
-		printf "echo 'super + e\n" >> $CHROOTFILE
-		printf "	thunar' >> /home/$SUPERUSR/.config/sxhkd/sxhkdrc\n" >> $CHROOTFILE
-		printf "chown -R $SUPERUSR:users /home/$SUPERUSR/.config\n" >> $CHROOTFILE
-		printf "systemctl enable lightdm\n" >> $CHROOTFILE
-	elif [ "$DESKTYPE" == "cinnamon" ] ; then
-		printf "systemctl enable lightdm\n" >> $CHROOTFILE
-	fi
+	case $DESKTYPE in
+		"mate" )
+			printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
+			printf "$lIGHTBG\n" >> $CHROOTFILE
+			printf "systemctl enable lightdm\n" >> $CHROOTFILE
+			;;
+		"xfce" )
+			printf "sed -i '/# session=/c\\session=startxfce4' /etc/lxdm/lxdm.conf\n" >> $CHROOTFILE
+			printf "systemctl enable lxdm\n" >> $CHROOTFILE
+			;;
+		"deepin" )
+			printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
+			printf "$lIGHTBG\n" >> $CHROOTFILE
+			printf "systemctl enable lightdm\n" >> $CHROOTFILE
+			printf "pacman --noconfirm -S deepin-{terminal,calculator,clipboard,community-wallpapers}\n" >> $CHROOTFILE
+			printf "[ \$? -ne 0 ] && PauseError 'Install [deepin] incomplete.'\n" >> $CHROOTFILE
+			;;
+		"lxde" )
+			printf "systemctl enable lxdm\n" >> $CHROOTFILE
+			;;
+		"lxqt" )
+			printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-webkit2-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
+			printf "$lIGHTBG\n" >> $CHROOTFILE
+			printf "sed -i 's/= antergos/= litarvan/g' /etc/lightdm/lightdm-webkit2-greeter.conf\n" >> $CHROOTFILE
+			printf "sed -i 's/icon_theme=oxygen/icon_theme=Adwaita/g' /usr/share/lxqt/lxqt.conf\n" >> $CHROOTFILE
+			printf "sed -i '/icon_theme=/c\\icon_theme=breeze-dark' $uSRCFG/lxqt/lxqt.conf\n" >> $CHROOTFILE
+			printf "systemctl enable lightdm\n" >> $CHROOTFILE
+			;;
+		"gnome" )
+			printf "sed -i 's/#Wayland/Wayland/g' /etc/gdm/custom.conf\n" >> $CHROOTFILE
+			printf "systemctl enable gdm\n" >> $CHROOTFILE
+			;;
+		"kde" )
+			printf "systemctl enable sddm\n" >> $CHROOTFILE
+			;;
+		"bspwm" )
+			printf "mkdir -p $uSRCFG/{bspwm,sxhkd,polybar,picom,nitrogen}\n" >> $CHROOTFILE
+			printf "cp /usr/share/doc/bspwm/examples/bspwmrc $uSRCFG/bspwm\n" >> $CHROOTFILE
+			printf "cp /usr/share/doc/bspwm/examples/sxhkdrc $uSRCFG/sxhkd\n" >> $CHROOTFILE
+			printf "cp /etc/xdg/picom.conf $uSRCFG/picom\n" >> $CHROOTFILE
+			printf "cp /etc/polybar/config.ini $uSRCFG/polybar\n" >> $CHROOTFILE
+			printf "chmod +x $uSRCFG/bwpwmrc\n" >> $CHROOTFILE
+			printf "echo 'sxhkd &\n" >> $CHROOTFILE
+			printf "picom --config ~/.config/picom/picom.conf &\n" >> $CHROOTFILE
+			printf "nitrogen --restore &\n" >> $CHROOTFILE
+			printf "polybar &' >> $uSRCFG/bspwm/bspwmrc\n" >> $CHROOTFILE
+			printf "sed -i 's/urxvt/mate-terminal --hide-menubar/g' $uSRCFG/sxhkd/sxhkdrc\n" >> $CHROOTFILE
+			printf "echo 'super + e\n" >> $CHROOTFILE
+			printf "	thunar' >> $uSRCFG/sxhkd/sxhkdrc\n" >> $CHROOTFILE
+			printf "echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg\n" >> $CHROOTFILE
+			printf "echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg\n" >> $CHROOTFILE
+			printf "chown -R $SUPERUSR:users $uSRCFG\n" >> $CHROOTFILE
+			printf "$lIGHTBG\n" >> $CHROOTFILE
+			printf "systemctl enable lightdm\n" >> $CHROOTFILE
+			;;
+		"cinnamon" )
+			printf "$lIGHTBG\n" >> $CHROOTFILE
+			printf "systemctl enable lightdm\n" >> $CHROOTFILE
+			;;
+		"openbox" )
+			local aPPEND1="    {beg => ['Shutdown-Menu', 'open-menu-symbolic']}, \\\n\\
+		{item => ['poweroff -i', 'Shutdown', 'system-shutdown-symbolic']}, \\\n\\
+		{item => ['reboot', 'Restart', 'view-refresh-symbolic']}, \\\n\\
+		{exit => ['Exit-OpenBox', 'application-exit']}, \\\n\\
+		{end => undef}, \\\n\\
+]"
+			local aPPEND2="<?xml version='1.0' encoding='utf-8'?>
+<openbox_menu xmlns='http://openbox.org/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://openbox.org/'>
+	<menu id='root-menu' label='obmenu-generator' execute='/usr/bin/obmenu-generator -i' />
+</openbox_menu>"
+			local oPENAUTO="tint2 &
+nitrogen --restore &
+picom --config ~/.config/picom/picom.conf &"
+			printf "mkdir -p $uSRCFG/{tint2,openbox,$OBMENU,picom,nitrogen}\n" >> $CHROOTFILE
+			printf "cp -R /etc/xdg/{tint2,openbox} $uSRCFG\n" >> $CHROOTFILE
+			printf "echo \"$oPENAUTO\" >> $uSRCFG/openbox/autostart\n" >> $CHROOTFILE
+			printf "pushd $PWD\n" >> $CHROOTFILE
+			printf "cd /opt\n" >> $CHROOTFILE
+			printf "$GITCLONE/$PERLLINUX.git\n" >> $CHROOTFILE
+			printf "$GITCLONE/$OBMENU.git\n" >> $CHROOTFILE
+			printf "popd\n" >> $CHROOTFILE
+			printf "chown -R $SUPERUSR:users /opt/$PERLLINUX /opt/$OBMENU\n" >> $CHROOTFILE
+			printf "su -c 'cd /opt/$PERLLINUX ; $PKGMAKE' - $SUPERUSR\n" >> $CHROOTFILE
+			printf "pacman --noconfirm -U /opt/$PERLLINUX/*.tar.zst\n" >> $CHROOTFILE
+			printf "su -c 'cd /opt/$OBMENU ; $PKGMAKE' - $SUPERUSR\n" >> $CHROOTFILE
+			printf "pacman --noconfirm -U /opt/$OBMENU/*.tar.zst\n" >> $CHROOTFILE
+			printf "sed -i 's/xterm/mate-terminal/g' /etc/xdg/$OBMENU/schema.pl\n" >> $CHROOTFILE
+			printf "sed -i '/xscreensaver-command/c\\#####/' /etc/xdg/$OBMENU/schema.pl\n" >> $CHROOTFILE
+			printf "sed -i '/application-exit/c\\#####/' /etc/xdg/$OBMENU/schema.pl\n" >> $CHROOTFILE
+			printf "sed -i \"s/^]/$aPPEND1/\" /etc/xdg/$OBMENU/schema.pl\n" >> $CHROOTFILE
+			printf "cp /etc/xdg/picom.conf $uSRCFG/picom\n" >> $CHROOTFILE
+			printf "cp /etc/xdg/$OBMENU/* $uSRCFG/$OBMENU\n" >> $CHROOTFILE
+			printf "echo \"$aPPEND2\" > $uSRCFG/openbox/menu.xml\n" >> $CHROOTFILE
+			printf "echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg\n" >> $CHROOTFILE
+			printf "echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg\n" >> $CHROOTFILE
+			printf "chown -R $SUPERUSR:users $uSRCFG\n" >> $CHROOTFILE
+			printf "$lIGHTBG\n" >> $CHROOTFILE
+			printf "systemctl enable lightdm\n" >> $CHROOTFILE
+			;;
+	esac
 
+	printf "echo \"$mONITOR1\" > /etc/X11/xorg.conf.d/01-monitor.conf\n" >> $CHROOTFILE
 	printf "pacman --noconfirm -S ${VDOPACK[$VDOID]}\n" >> $CHROOTFILE
 	printf "[ \$? -ne 0 ] && PauseError 'Install [${VDOPACK[$VDOID]}] incomplete.'\n" >> $CHROOTFILE
 	if [ $AUDID != "none" ]; then
@@ -842,8 +941,7 @@ PrepareScript() {
 	printf "ln -sf /usr/share/zoneinfo/$TIMEZONE /mnt/etc/localtime\n" >> $INITFILE
 	printf "cp $CHROOTFILE /mnt${CHROOTFILE}\n" >> $INITFILE
 	printf "chmod 700 /mnt${CHROOTFILE}\n" >> $INITFILE
-	printf "sed -i '/#Color/c\\Color' /mnt/etc/pacman.conf\n" >> $INITFILE
-	printf "sed -i '/#ParallelDownloads/c\\ParallelDownloads = 2' /mnt/etc/pacman.conf\n" >> $INITFILE
+	printf "cp /etc/pacman.conf /mnt/etc/pacman.conf\n" >> $INITFILE
 	printf "arch-chroot /mnt $CHROOTFILE\n" >> $INITFILE
 	printf "#rm /mnt$CHROOTFILE\n" >> $INITFILE
 	printf "umount -R /mnt\n" >> $INITFILE
@@ -870,7 +968,7 @@ ConfirmInstall() {
 		MsgBox 'Install Arch Linux' "You can press Ctl+Alt+Fn to switch another console, then run $INITFILE."
 	else
 		$INITFILE
-		MsgBox "Arch Linux Installation" "Install Arch Linux Completely......."
+		[ $? -eq 0 ] && MsgBox "Arch Linux Installation" "Install Arch Linux Completely......." && RS=1    # RS=1 is EXIT from Main menu
 	fi
 	[ -f $CHROOTFILE ] && rm $CHROOTFILE
 	[ -f $INITFILE ] && rm $INITFILE
@@ -998,7 +1096,7 @@ ArchGUI() {
 		elif [ $rs -eq 1 ]; then
 			PrepareScript
 			GenDesktopScript
-			ConfirmInstall
+			ConfirmInstall			
 		fi
 	done
 }
