@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================================== #
-# |                   minArchinstall.sh                                                           |
+# |                   minArchinstall.sh   Version 1.0.1                                           |
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
@@ -24,7 +24,7 @@ fi
 
 ping -c 1 www.google.com
 if [ "$?" -eq 2 ]; then
-	printf "Internet Connection........\033[1;31mE.R.R.O.R\033[0m...!\n"
+	echo -e "Internet Connection........\e[1;31mE.R.R.O.R\e[0m...! "
 	exit 2
 fi
 
@@ -35,7 +35,7 @@ WaitReflector() {
 	clear
 	while [ `ps -C reflector | wc -l` -gt 1 ]
 	do
-		printf "\033[1;34mPlease waiting for [Reflector] process has finished.\033[0m..."
+		echo -e "\e[1;34mPlease waiting for [Reflector] process has finished.\e[0m..."
 		sleep 2
 	done
 }
@@ -209,7 +209,7 @@ DESKPAK["deepin"]="$LIGHTDM deepin deepin-kwin"
 DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
 DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
 DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitrogen thunar"
-DESKPAK["openbox"]="$LIGHTDM openbox obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
+DESKPAK["openbox"]="$LIGHTDM openbox obconf lxappearance-obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
 
 declare NUMDEV=0
 declare -a DSKDEV
@@ -248,10 +248,10 @@ TimeZone() {
 	local cmd
 	local rs
 	local cl=`cat $TZFILE | wc -l`
+	local line
 	cmd="$STDDIALOG \
 		--title 'Your timezone' --default-item \"$TIMEZONE\" --menu 'Select timezone:-' 24 43 16"
 	for i in $(seq 1 1 $cl); do
-		local line
 		read -r line
 		cmd+=" '$line' ''"
 	done < $TZFILE
@@ -622,97 +622,98 @@ GenMountScript() {
 	local endboot="501MiB"
 	local nxpart
 	local devdisk="/dev/$DEVDISK"
-	printf "parted -s $devdisk mklabel gpt\n" >> $INITFILE
-	printf "parted -s $devdisk mkpart primary fat32 1MiB $endboot\n" >> $INITFILE
-	printf "parted -s $devdisk set 1 esp on\n" >> $INITFILE
-	printf "mkfs.fat -F32 ${devdisk}1\n" >> $INITFILE
+	echo "parted -s $devdisk mklabel gpt" >> $INITFILE
+	echo "parted -s $devdisk mkpart primary fat32 1MiB $endboot" >> $INITFILE
+	echo "parted -s $devdisk set 1 esp on" >> $INITFILE
+	echo "mkfs.fat -F32 ${devdisk}1" >> $INITFILE
 	if [ $SWAPID -eq 2 ]; then
 		# ---- create swap partition ----
-		printf "parted -s $devdisk mkpart primary linux-swap $endboot 3GiB\n" >> $INITFILE
-		printf "mkswap ${devdisk}2\n" >> $INITFILE
+		echo "parted -s $devdisk mkpart primary linux-swap $endboot 3GiB" >> $INITFILE
+		echo "mkswap ${devdisk}2" >> $INITFILE
 		nxpart="3GiB"
 		case $MNTTID in
-			0 ) printf "parted -s $devdisk mkpart primary ext4 $nxpart 100%%\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}3\n" >> $INITFILE
-				printf "mount ${devdisk}3 /mnt\n" >> $INITFILE
-				printf "mkdir -p /mnt/boot/EFI\n" >> $INITFILE
-				printf "mount ${devdisk}1 /mnt/boot/EFI\n" >> $INITFILE
+			0 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 100%" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}3" >> $INITFILE
+				echo "mount ${devdisk}3 /mnt" >> $INITFILE
+				echo "mkdir -p /mnt/boot/EFI" >> $INITFILE
+				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
 				;;
-			1 ) printf "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB\n" >> $INITFILE
-				printf "parted -s $devdisk mkpart primary ext4 20GiB 100%%\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}3\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}4\n" >> $INITFILE
-				printf "mount ${devdisk}3 /mnt\n" >> $INITFILE
-				printf "mkdir -p /mnt/boot/EFI /mnt/home\n" >> $INITFILE
-				printf "mount ${devdisk}1 /mnt/boot/EFI\n" >> $INITFILE
-				printf "mount ${devdisk}4 /mnt/home\n" >> $INITFILE
+			1 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB" >> $INITFILE
+				echo "parted -s $devdisk mkpart primary ext4 20GiB 100%" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}3" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}4" >> $INITFILE
+				echo "mount ${devdisk}3 /mnt" >> $INITFILE
+				echo "mkdir -p /mnt/boot/EFI /mnt/home" >> $INITFILE
+				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
+				echo "mount ${devdisk}4 /mnt/home" >> $INITFILE
 				;;
-			2 ) printf "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB\n" >> $INITFILE
-				printf "parted -s $devdisk mkpart primary ext4 20GiB 25GiB\n" >> $INITFILE
-				printf "parted -s $devdisk mkpart primary ext4 25GiB 30GiB\n" >> $INITFILE
-				printf "parted -s $devdisk mkpart primary ext4 30GiB 100%%\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}3\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}4\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}5\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}6\n" >> $INITFILE
-				printf "mount ${devdisk}3 /mnt\n" >> $INITFILE
-				printf "mkdir -p /mnt/boot/EFI /mnt/{home,var,tmp}\n" >> $INITFILE
-				printf "mount ${devdisk}1 /mnt/boot/EFI\n" >> $INITFILE
-				printf "mount ${devdisk}4 /mnt/var\n" >> $INITFILE
-				printf "mount ${devdisk}5 /mnt/tmp\n" >> $INITFILE
-				printf "mount ${devdisk}6 /mnt/home\n" >> $INITFILE
+			2 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB" >> $INITFILE
+				echo "parted -s $devdisk mkpart primary ext4 20GiB 25GiB" >> $INITFILE
+				echo "parted -s $devdisk mkpart primary ext4 25GiB 30GiB" >> $INITFILE
+				echo "parted -s $devdisk mkpart primary ext4 30GiB 100%" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}3" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}4" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}5" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}6" >> $INITFILE
+				echo "mount ${devdisk}3 /mnt" >> $INITFILE
+				echo "mkdir -p /mnt/boot/EFI /mnt/{home,var,tmp}" >> $INITFILE
+				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
+				echo "mount ${devdisk}4 /mnt/var" >> $INITFILE
+				echo "mount ${devdisk}5 /mnt/tmp" >> $INITFILE
+				echo "mount ${devdisk}6 /mnt/home" >> $INITFILE
 				;;
 		esac
-		printf "swapon ${devdisk}2\n" >> $INITFILE
+		echo "swapon ${devdisk}2" >> $INITFILE
 	else
 		nxpart=$endboot
 		case $MNTTID in
-			0 ) printf "parted -s $devdisk mkpart primary ext4 $nxpart 100%%\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}2\n" >> $INITFILE
-				printf "mount ${devdisk}2 /mnt\n" >> $INITFILE
-				printf "mkdir -p /mnt/boot/EFI\n" >> $INITFILE
-				printf "mount ${devdisk}1 /mnt/boot/EFI\n" >> $INITFILE
+			0 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 100%" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}2" >> $INITFILE
+				echo "mount ${devdisk}2 /mnt" >> $INITFILE
+				echo "mkdir -p /mnt/boot/EFI" >> $INITFILE
+				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
 				;;
-			1 ) printf "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB\n" >> $INITFILE
-				printf "parted -s $devdisk mkpart primary ext4 20GiB 100%%\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}2\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}3\n" >> $INITFILE
-				printf "mount ${devdisk}2 /mnt\n" >> $INITFILE
-				printf "mkdir -p /mnt/boot/EFI /mnt/home\n" >> $INITFILE
-				printf "mount ${devdisk}1 /mnt/boot/EFI\n" >> $INITFILE
-				printf "mount ${devdisk}3 /mnt/home\n" >> $INITFILE
+			1 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB" >> $INITFILE
+				echo "parted -s $devdisk mkpart primary ext4 20GiB 100%" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}2" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}3" >> $INITFILE
+				echo "mount ${devdisk}2 /mnt" >> $INITFILE
+				echo "mkdir -p /mnt/boot/EFI /mnt/home" >> $INITFILE
+				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
+				echo "mount ${devdisk}3 /mnt/home" >> $INITFILE
 				;;
-			2 ) printf "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB\n" >> $INITFILE
-				printf "parted -s $devdisk mkpart primary ext4 20GiB 25GiB\n" >> $INITFILE
-				printf "parted -s $devdisk mkpart primary ext4 25GiB 30GiB\n" >> $INITFILE
-				printf "parted -s $devdisk mkpart primary ext4 30GiB 100%%\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}2\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}3\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}4\n" >> $INITFILE
-				printf "mkfs.ext4 -F ${devdisk}5\n" >> $INITFILE
-				printf "mount ${devdisk}2 /mnt\n" >> $INITFILE
-				printf "mkdir -p /mnt/boot/EFI /mnt/{home,var,tmp}\n" >> $INITFILE
-				printf "mount ${devdisk}1 /mnt/boot/EFI\n" >> $INITFILE
-				printf "mount ${devdisk}3 /mnt/var\n" >> $INITFILE
-				printf "mount ${devdisk}4 /mnt/tmp\n" >> $INITFILE
-				printf "mount ${devdisk}5 /mnt/home\n" >> $INITFILE
+			2 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB" >> $INITFILE
+				echo "parted -s $devdisk mkpart primary ext4 20GiB 25GiB" >> $INITFILE
+				echo "parted -s $devdisk mkpart primary ext4 25GiB 30GiB" >> $INITFILE
+				echo "parted -s $devdisk mkpart primary ext4 30GiB 100%" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}2" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}3" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}4" >> $INITFILE
+				echo "mkfs.ext4 -F ${devdisk}5" >> $INITFILE
+				echo "mount ${devdisk}2 /mnt" >> $INITFILE
+				echo "mkdir -p /mnt/boot/EFI /mnt/{home,var,tmp}" >> $INITFILE
+				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
+				echo "mount ${devdisk}3 /mnt/var" >> $INITFILE
+				echo "mount ${devdisk}4 /mnt/tmp" >> $INITFILE
+				echo "mount ${devdisk}5 /mnt/home" >> $INITFILE
 				;;
 		esac
 		# ---- make /swapfile ----
 		if [ $SWAPID -eq 1 ]; then
-			printf "dd if=/dev/zero of=/mnt/swapfile bs=1M count=2560\n" >> $INITFILE
-			printf "chmod 600 /mnt/swapfile\n" >> $INITFILE
-			printf "mkswap /mnt/swapfile\n" >> $INITFILE
+			echo "dd if=/dev/zero of=/mnt/swapfile bs=1M count=2560" >> $INITFILE
+			echo "chmod 600 /mnt/swapfile" >> $INITFILE
+			echo "mkswap /mnt/swapfile" >> $INITFILE
 		fi
 	fi
 }
 
 
+#=================== GenDesktopScript() ===================#
 GenDesktopScript() {
-	local mONITOR1="Section \\\\\"Monitor\\\\\"
-	Identifier \\\\\"Virtual-1\\\\\"
-	Option \\\\\"PreferredMode\\\\\" \\\\\"$RESOLUTION\\\\\"
-	Option \\\\\"Primary\\\\\" \\\\\"1\\\\\"
+	local mONITOR1="Section \\\"Monitor\\\"
+	Identifier \\\"Virtual-1\\\"
+	Option \\\"PreferredMode\\\" \\\"$RESOLUTION\\\"
+	Option \\\"Primary\\\" \\\"1\\\"
 EndSection"
 	local sUPERHOME="/home/$SUPERUSR"
 	local uSRCFG="$sUPERHOME/.config"
@@ -720,8 +721,7 @@ EndSection"
 	local bGSAVED="[xin_-1]
 file=$bGDIR/awesome.png
 mode=4
-bgcolor=#000000
-"
+bgcolor=#000000 "
 	local nITROGEN="[geometry]
 posx=0
 posy=0
@@ -733,175 +733,190 @@ view=icon
 recurse=true
 sort=alpha
 icon_caps=false
-dirs=$bGDIR;
-"
-	local lIGHTBG="sed -i '/#background=/c\\\\\\\\background=/usr/share/backgrounds/archlinux/geowaves.png' /etc/lightdm/lightdm-gtk-greeter.conf"
+dirs=$bGDIR; "
+	local lIGHTBG="sed -i '/#background=/c\\background=/usr/share/backgrounds/archlinux/geowaves.png' /etc/lightdm/lightdm-gtk-greeter.conf"
 
-	printf "\npacman --noconfirm -S xorg network-manager-applet archlinux-wallpaper\n">> $CHROOTFILE
-	printf "[ \$? -ne 0 ] && PauseError 'Install [xorg...] incomplete'\n" >> $CHROOTFILE
-	printf "pacman --noconfirm -S ${DESKPAK[$DESKTYPE]}\n" >> $CHROOTFILE
-	printf "[ \$? -ne 0 ] && PauseError 'Install [$DESKTYPE...] incomplete'\n" >> $CHROOTFILE
+	echo -e "\npacman --noconfirm -S xorg network-manager-applet archlinux-wallpaper">> $CHROOTFILE
+	echo "[ \$? -ne 0 ] && PauseError 'Install [xorg...] incomplete'" >> $CHROOTFILE
+	echo "pacman --noconfirm -S ${DESKPAK[$DESKTYPE]}" >> $CHROOTFILE
+	echo "[ \$? -ne 0 ] && PauseError 'Install [$DESKTYPE...] incomplete'" >> $CHROOTFILE
 	case $DESKTYPE in
 		"mate" )
-			printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
-			printf "$lIGHTBG\n" >> $CHROOTFILE
-			printf "systemctl enable lightdm\n" >> $CHROOTFILE
-			;;
+			echo "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
+			echo "$lIGHTBG" >> $CHROOTFILE
+			echo "systemctl enable lightdm" >> $CHROOTFILE
+			;;		# mate
 		"xfce" )
-			printf "sed -i '/# session=/c\\session=startxfce4' /etc/lxdm/lxdm.conf\n" >> $CHROOTFILE
-			printf "systemctl enable lxdm\n" >> $CHROOTFILE
-			;;
+			echo "sed -i '/# session=/c\\session=startxfce4' /etc/lxdm/lxdm.conf" >> $CHROOTFILE
+			echo "systemctl enable lxdm" >> $CHROOTFILE
+			;;		# xfce4
 		"deepin" )
-			printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
-			printf "$lIGHTBG\n" >> $CHROOTFILE
-			printf "systemctl enable lightdm\n" >> $CHROOTFILE
-			printf "pacman --noconfirm -S deepin-{terminal,calculator,clipboard,community-wallpapers}\n" >> $CHROOTFILE
-			printf "[ \$? -ne 0 ] && PauseError 'Install [deepin] incomplete.'\n" >> $CHROOTFILE
+			echo "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf" >> $CHROOTFILE
+			echo "$lIGHTBG" >> $CHROOTFILE
+			echo "systemctl enable lightdm" >> $CHROOTFILE
+			echo "pacman --noconfirm -S deepin-{terminal,calculator,clipboard,community-wallpapers}" >> $CHROOTFILE
+			echo "[ \$? -ne 0 ] && PauseError 'Install [deepin] incomplete.'" >> $CHROOTFILE
 			;;
 		"lxde" )
-			printf "systemctl enable lxdm\n" >> $CHROOTFILE
-			;;
+			echo "systemctl enable lxdm" >> $CHROOTFILE
+			;;		# lxde
 		"lxqt" )
-			printf "sed -i '/#greeter-session=/c\\greeter-session=lightdm-webkit2-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
-			printf "$lIGHTBG\n" >> $CHROOTFILE
-			printf "sed -i 's/= antergos/= litarvan/g' /etc/lightdm/lightdm-webkit2-greeter.conf\n" >> $CHROOTFILE
-			printf "sed -i 's/icon_theme=oxygen/icon_theme=Adwaita/g' /usr/share/lxqt/lxqt.conf\n" >> $CHROOTFILE
-			printf "sed -i '/icon_theme=/c\\icon_theme=breeze-dark' $uSRCFG/lxqt/lxqt.conf\n" >> $CHROOTFILE
-			printf "systemctl enable lightdm\n" >> $CHROOTFILE
-			;;
+			echo "sed -i '/#greeter-session=/c\\greeter-session=lightdm-webkit2-greeter' /etc/lightdm/lightdm.confn" >> $CHROOTFILE
+			echo "$lIGHTBG" >> $CHROOTFILE
+			echo "sed -i 's/= antergos/= litarvan/g' /etc/lightdm/lightdm-webkit2-greeter.conf" >> $CHROOTFILE
+			echo "sed -i 's/icon_theme=oxygen/icon_theme=Adwaita/g' /usr/share/lxqt/lxqt.conf" >> $CHROOTFILE
+			echo "sed -i '/icon_theme=/c\\icon_theme=breeze-dark' $uSRCFG/lxqt/lxqt.conf" >> $CHROOTFILE
+			echo "systemctl enable lightdm" >> $CHROOTFILE
+			;;		# lxqt
 		"gnome" )
-			printf "sed -i 's/#Wayland/Wayland/g' /etc/gdm/custom.conf\n" >> $CHROOTFILE
-			printf "systemctl enable gdm\n" >> $CHROOTFILE
-			;;
+			echo "sed -i 's/#Wayland/Wayland/g' /etc/gdm/custom.conf" >> $CHROOTFILE
+			echo "systemctl enable gdm" >> $CHROOTFILE
+			;;		# gnome
 		"kde" )
-			printf "systemctl enable sddm\n" >> $CHROOTFILE
-			;;
+			echo "systemctl enable sddm" >> $CHROOTFILE
+			;;		# kde
 		"bspwm" )
-			printf "mkdir -p $uSRCFG/{bspwm,sxhkd,polybar,picom,nitrogen}\n" >> $CHROOTFILE
-			printf "cp /usr/share/doc/bspwm/examples/bspwmrc $uSRCFG/bspwm\n" >> $CHROOTFILE
-			printf "cp /usr/share/doc/bspwm/examples/sxhkdrc $uSRCFG/sxhkd\n" >> $CHROOTFILE
-			printf "cp /etc/xdg/picom.conf $uSRCFG/picom\n" >> $CHROOTFILE
-			printf "cp /etc/polybar/config.ini $uSRCFG/polybar\n" >> $CHROOTFILE
-			printf "chmod +x $uSRCFG/bwpwmrc\n" >> $CHROOTFILE
-			printf "echo 'sxhkd &\n" >> $CHROOTFILE
-			printf "picom --config ~/.config/picom/picom.conf &\n" >> $CHROOTFILE
-			printf "nitrogen --restore &\n" >> $CHROOTFILE
-			printf "polybar &' >> $uSRCFG/bspwm/bspwmrc\n" >> $CHROOTFILE
-			printf "sed -i 's/urxvt/mate-terminal --hide-menubar/g' $uSRCFG/sxhkd/sxhkdrc\n" >> $CHROOTFILE
-			printf "echo 'super + e\n" >> $CHROOTFILE
-			printf "	thunar' >> $uSRCFG/sxhkd/sxhkdrc\n" >> $CHROOTFILE
-			printf "echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg\n" >> $CHROOTFILE
-			printf "echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg\n" >> $CHROOTFILE
-			printf "chown -R $SUPERUSR:users $uSRCFG\n" >> $CHROOTFILE
-			printf "$lIGHTBG\n" >> $CHROOTFILE
-			printf "systemctl enable lightdm\n" >> $CHROOTFILE
-			;;
+			local bSPWMSCRT="mkdir -p $uSRCFG/{bspwm,sxhkd,polybar,picom,nitrogen}
+cp /usr/share/doc/bspwm/examples/bspwmrc $uSRCFG/bspwm
+cp /usr/share/doc/bspwm/examples/sxhkdrc $uSRCFG/sxhkd
+cp /etc/xdg/picom.conf $uSRCFG/picom
+cp /etc/polybar/config.ini $uSRCFG/polybar
+chmod +x $uSRCFG/bwpwmrc
+echo 'pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf &
+nitrogen --restore &
+pgrep -x polybar > /dev/null || polybar &' >> $uSRCFG/bspwm/bspwmrc
+sed -i 's/urxvt/mate-terminal --hide-menubar/g' $uSRCFG/sxhkd/sxhkdrc
+echo 'super + e
+	thunar' >> $uSRCFG/sxhkd/sxhkdrc
+echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
+echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
+chown -R $SUPERUSR:users $uSRCFG
+$lIGHTBG
+systemctl enable lightdm"
+			echo "$bSPWMSCRT" >> $CHROOTFILE
+			;;		# bspwm
 		"cinnamon" )
-			printf "$lIGHTBG\n" >> $CHROOTFILE
-			printf "systemctl enable lightdm\n" >> $CHROOTFILE
-			;;
+			echo "$lIGHTBG" >> $CHROOTFILE
+			echo "systemctl enable lightdm" >> $CHROOTFILE
+			;;		# cinnamon
 		"openbox" )
-			local aPPEND1="    {beg => ['Shutdown-Menu', 'open-menu-symbolic']}, \\\n\\
-		{item => ['poweroff -i', 'Shutdown', 'system-shutdown-symbolic']}, \\\n\\
-		{item => ['reboot', 'Restart', 'view-refresh-symbolic']}, \\\n\\
-		{exit => ['Exit-OpenBox', 'application-exit']}, \\\n\\
-		{end => undef}, \\\n\\
+			local aPPEND1="    {beg => ['Shutdown-Menu', 'open-menu-symbolic']}, \\n\\
+		{item => ['poweroff -i', 'Shutdown', 'system-shutdown-symbolic']}, \\n\\
+		{item => ['reboot', 'Restart', 'view-refresh-symbolic']}, \\n\\
+		{exit => ['Exit-OpenBox', 'application-exit']}, \\n\\
+		{end => undef}, \\n\\
 ]"
 			local aPPEND2="<?xml version='1.0' encoding='utf-8'?>
 <openbox_menu xmlns='http://openbox.org/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://openbox.org/'>
 	<menu id='root-menu' label='obmenu-generator' execute='/usr/bin/obmenu-generator -i' />
 </openbox_menu>"
-			local oPENAUTO="tint2 &
+			local oPENAUTO="pgrep -x tint2 > /dev/null || tint2 &
 nitrogen --restore &
-picom --config ~/.config/picom/picom.conf &"
-			printf "mkdir -p $uSRCFG/{tint2,openbox,$OBMENU,picom,nitrogen}\n" >> $CHROOTFILE
-			printf "cp -R /etc/xdg/{tint2,openbox} $uSRCFG\n" >> $CHROOTFILE
-			printf "echo \"$oPENAUTO\" >> $uSRCFG/openbox/autostart\n" >> $CHROOTFILE
-			printf "pushd $PWD\n" >> $CHROOTFILE
-			printf "cd /opt\n" >> $CHROOTFILE
-			printf "$GITCLONE/$PERLLINUX.git\n" >> $CHROOTFILE
-			printf "$GITCLONE/$OBMENU.git\n" >> $CHROOTFILE
-			printf "popd\n" >> $CHROOTFILE
-			printf "chown -R $SUPERUSR:users /opt/$PERLLINUX /opt/$OBMENU\n" >> $CHROOTFILE
-			printf "su -c 'cd /opt/$PERLLINUX ; $PKGMAKE' - $SUPERUSR\n" >> $CHROOTFILE
-			printf "pacman --noconfirm -U /opt/$PERLLINUX/*.tar.zst\n" >> $CHROOTFILE
-			printf "su -c 'cd /opt/$OBMENU ; $PKGMAKE' - $SUPERUSR\n" >> $CHROOTFILE
-			printf "pacman --noconfirm -U /opt/$OBMENU/*.tar.zst\n" >> $CHROOTFILE
-			printf "sed -i 's/xterm/mate-terminal/g' /etc/xdg/$OBMENU/schema.pl\n" >> $CHROOTFILE
-			printf "sed -i '/xscreensaver-command/c\\#####/' /etc/xdg/$OBMENU/schema.pl\n" >> $CHROOTFILE
-			printf "sed -i '/application-exit/c\\#####/' /etc/xdg/$OBMENU/schema.pl\n" >> $CHROOTFILE
-			printf "sed -i \"s/^]/$aPPEND1/\" /etc/xdg/$OBMENU/schema.pl\n" >> $CHROOTFILE
-			printf "cp /etc/xdg/picom.conf $uSRCFG/picom\n" >> $CHROOTFILE
-			printf "cp /etc/xdg/$OBMENU/* $uSRCFG/$OBMENU\n" >> $CHROOTFILE
-			printf "echo \"$aPPEND2\" > $uSRCFG/openbox/menu.xml\n" >> $CHROOTFILE
-			printf "echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg\n" >> $CHROOTFILE
-			printf "echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg\n" >> $CHROOTFILE
-			printf "chown -R $SUPERUSR:users $uSRCFG\n" >> $CHROOTFILE
-			printf "$lIGHTBG\n" >> $CHROOTFILE
-			printf "systemctl enable lightdm\n" >> $CHROOTFILE
-			;;
+pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf &"
+			local tINT2RC="mate-terminal.desktop \\n\\
+launcher_item_app = geany.desktop \\n\\
+launcher_item_app = thunar.desktop \\n\\
+launcher_item_app = nitrogen.desktop \\n\\
+launcher_item_app = obconf.desktop"
+			local oPENSCRT="mkdir -p $uSRCFG/{tint2,openbox,$OBMENU,picom,nitrogen}
+cp -R /etc/xdg/{tint2,openbox} $uSRCFG
+echo \"$oPENAUTO\" >> $uSRCFG/openbox/autostart
+pushd $PWD
+cd /opt
+$GITCLONE/$PERLLINUX.git
+$GITCLONE/$OBMENU.git
+popd
+chown -R $SUPERUSR:users /opt/$PERLLINUX /opt/$OBMENU
+su -c 'cd /opt/$PERLLINUX ; $PKGMAKE' - $SUPERUSR
+pacman --noconfirm -U /opt/$PERLLINUX/*.tar.zst
+su -c 'cd /opt/$OBMENU ; $PKGMAKE' - $SUPERUSR
+pacman --noconfirm -U /opt/$OBMENU/*.tar.zst
+sed -i 's/xterm/mate-terminal/g;/xscreensaver-command/d;/application-exit/d' /etc/xdg/$OBMENU/schema.pl
+sed -i \"s/^]/$aPPEND1/\" /etc/xdg/$OBMENU/schema.pl
+sed -i '/iceweasel.desktop/d;/chromium/d' $uSRCFG/tint2/tint2rc
+sed -i \"s/google-chrome.desktop/${tINT2RC}/g\" $uSRCFG/tint2/tint2rc
+cp /etc/xdg/picom.conf $uSRCFG/picom
+cp /etc/xdg/$OBMENU/* $uSRCFG/$OBMENU
+echo \"$aPPEND2\" > $uSRCFG/openbox/menu.xml
+echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
+echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
+chown -R $SUPERUSR:users $uSRCFG
+$lIGHTBG
+systemctl enable lightdm"
+			echo "$oPENSCRT" >> $CHROOTFILE
+			;;		# openbox
 	esac
 
-	printf "echo \"$mONITOR1\" > /etc/X11/xorg.conf.d/01-monitor.conf\n" >> $CHROOTFILE
-	printf "pacman --noconfirm -S ${VDOPACK[$VDOID]}\n" >> $CHROOTFILE
-	printf "[ \$? -ne 0 ] && PauseError 'Install [${VDOPACK[$VDOID]}] incomplete.'\n" >> $CHROOTFILE
+	echo "echo \"$mONITOR1\" > /etc/X11/xorg.conf.d/01-monitor.conf" >> $CHROOTFILE
+	echo "pacman --noconfirm -S ${VDOPACK[$VDOID]}" >> $CHROOTFILE
+	echo "[ \$? -ne 0 ] && PauseError 'Install [${VDOPACK[$VDOID]}] incomplete.'" >> $CHROOTFILE
 	if [ $AUDID != "none" ]; then
-		printf "pacman --noconfirm -S $AUDPACK\n" >> $CHROOTFILE
+		echo "pacman --noconfirm -S $AUDPACK" >> $CHROOTFILE
 	fi
-	printf "pacman --noconfirm -S noto-fonts $XPACKS\n" >> $CHROOTFILE
-	printf "[ \$? -ne 0 ] && PauseError 'Additional packages for GUI incomplete.'\n" >> $CHROOTFILE
+	echo "pacman --noconfirm -S noto-fonts $XPACKS" >> $CHROOTFILE
+	echo "[ \$? -ne 0 ] && PauseError 'Additional packages for GUI incomplete.'" >> $CHROOTFILE
 }
+#=================== GenDesktopScript() ===================#
 
 
+#=================== GenRootScript() ===================#
 GenRootScript() {
-	printf "#!/bin/bash\n\n\n" > $CHROOTFILE
-	printf "PauseError() {\n" >> $CHROOTFILE
-	printf "	local pkey\n" >> $CHROOTFILE
-	printf "	echo '#*--------------------------------------------*'\n" >> $CHROOTFILE
-	printf "	echo \"#  Warning : \$1  #\"\n" >> $CHROOTFILE
-	printf "	echo '#*--------------------------------------------*'\n" >> $CHROOTFILE
-	printf "	read -p 'Do you want to continue?...<Y/n>:' pkey\n" >> $CHROOTFILE
-    printf "	pkey=\${pkey^^}\n" >> $CHROOTFILE
-	printf "	if [ \"\$pkey\" == 'N' ]; then\n" >> $CHROOTFILE
-	printf "		exit 2\n" >> $CHROOTFILE
-	printf "	fi\n" >> $CHROOTFILE
-	printf "}\n\n" >> $CHROOTFILE
-	printf "echo 'en_US.UTF-8 UTF-8' > /etc/local.gen\n" >> $CHROOTFILE
-	printf "echo 'en_US ISO-8859-1' >> /etc/local.gen\n" >> $CHROOTFILE
-	printf "locale-gen\n" >> $CHROOTFILE
-	printf "echo 'LANG=en_US.UTF-8'\n" >> $CHROOTFILE
-	printf "echo '$HOSTNAME' > /etc/hostname\n" >> $CHROOTFILE
-	printf "echo '127.0.0.1 localhost' >> /etc/hosts\n" >> $CHROOTFILE
-	printf "echo '::1 localhost' >> /etc/hosts\n" >> $CHROOTFILE
-	printf "echo '127.0.1.1 ${HOSTNAME}.localdomain ${HOSTNAME}' >> /etc/hosts\n" >> $CHROOTFILE
-	printf "pacman --noconfirm -S ${OPPACKS2} ${CLILIST} ${SERVLIST}\n" >> $CHROOTFILE
-	printf "[ \$? -ne 0 ] && PauseError 'linux_cli packages incomplete.'\n" >> $CHROOTFILE
-	printf "systemctl enable NetworkManager\n" >> $CHROOTFILE
-	printf "mkinitcpio -P\n" >> $CHROOTFILE
-	printf "echo 'root:${ROOTPASS}' | chpasswd\n" >> $CHROOTFILE
-	printf "useradd -m -g users -G wheel,storage,power,audio,video ${SUPERUSR}\n" >> $CHROOTFILE
-	printf "echo '${SUPERUSR}:${SUPERPAS}' | chpasswd\n" >> $CHROOTFILE
-	printf "sed -i 's/# %%wheel ALL=(ALL) ALL/%%wheel ALL=(ALL) ALL/g' /etc/sudoers\n" >> $CHROOTFILE
-	printf "sed -i 's/# %%wheel ALL=(ALL:ALL) ALL/%%wheel ALL=(ALL:ALL) ALL/g' /etc/sudoers\n" >> $CHROOTFILE
-	printf "echo 'source \$VIMRUNTIME/defaults.vim' > /home/${SUPERUSR}/.vimrc\n" >> $CHROOTFILE
-	printf "echo 'set number' >> /home/${SUPERUSR}/.vimrc\n" >> $CHROOTFILE
-	printf "chown ${SUPERUSR}:users /home/${SUPERUSR}/.vimrc\n" >> $CHROOTFILE
-	printf "chmod 600 /home/${SUPERUSR}/.vimrc\n" >> $CHROOTFILE
-	if [ "${OPCHCK["neofetch"]}" == "on" ] ; then
-		printf "echo 'neofetch' >> /home/${SUPERUSR}/.bash_profile\n" >> $CHROOTFILE
-	else
-		printf "echo 'screenfetch' >> /home/${SUPERUSR}/.bash_profile\n" >> $CHROOTFILE
+	local rOOTSCRIPT1="#!/usr/bin/bash\n
+PauseError() {
+	local pkey
+	echo '#*--------------------------------------------*'
+	echo \"#  Warning : \$1  #\"
+	echo '#*--------------------------------------------*'
+	read -p 'Do you want to continuew?....<Y/n>:' pkey
+	pkey=\${pkey^^}
+	if [ \"\$pkey\" == 'N' ]; then
+		exit 2
 	fi
-	printf "pacman --noconfirm -S grub efibootmgr\n" >> $CHROOTFILE
-	printf "[ \$? -ne 0 ] && PauseError 'Install [grub efibootmgr] incomplete.'\n" >> $CHROOTFILE
-	printf "grub-install --target=x86_64-efi --efi-directory=/boot/EFI --bootloader-id=GRUB\n" >> $CHROOTFILE
-	printf "[ \$? -ne 0 ] && PauseError 'grub-install incomplete.'\n" >> $CHROOTFILE
-	printf "grub-mkconfig -o /boot/grub/grub.cfg\n" >> $CHROOTFILE
-	printf "[ \$? -ne 0 ] && PauseError 'grub-mkconfig incomplete.'\n" >> $CHROOTFILE
-	[ $ROOTABLE == "disable" ] && printf "usermod -s /usr/bin/nologin root\n" >> $CHROOTFILE
 }
 
+echo 'en_US.UTF-8 UTF-8' > /etc/local.gen
+echo 'en_US ISO-8859-1' >> /etc/local.gen
+locale-gen
+echo 'LANG=en_US.UTF-8'
+echo '$HOSTNAME' > /etc/hostname
+echo '127.0.0.1 localhost' >> /etc/hosts
+echo '::1 localhost' >> /etc/hosts
+echo '127.0.1.1 ${HOSTNAME}.localdomain ${HOSTNAME}' >> /etc/hosts
+pacman --noconfirm -S ${OPPACKS2} ${CLILIST} ${SERVLIST}
+[ \$? -ne 0 ] && PauseError 'linux_cli packages incomplete.'
+systemctl enable NetworkManager
+mkinitcpio -P
+echo 'root:${ROOTPASS}' | chpasswd
+useradd -m -g users -G wheel,storage,power,audio,video ${SUPERUSR}
+echo '${SUPERUSR}:${SUPERPAS}' | chpasswd
+sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers
+sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/g' /etc/sudoers
+echo 'source \$VIMRUNTIME/defaults.vim' > /home/${SUPERUSR}/.vimrc
+echo 'set number' >> /home/${SUPERUSR}/.vimrc
+chown ${SUPERUSR}:users /home/${SUPERUSR}/.vimrc
+chmod 600 /home/${SUPERUSR}/.vimrc"
 
+	echo -e "$rOOTSCRIPT1" > $CHROOTFILE
+	if [ "${OPCHCK["neofetch"]}" == "on" ] ; then
+		echo "echo 'neofetch' >> /home/${SUPERUSR}/.bash_profile" >> $CHROOTFILE
+	else
+		echo "echo 'screenfetch' >> /home/${SUPERUSR}/.bash_profile" >> $CHROOTFILE
+	fi
+
+	local rOOTSCRIPT2="pacman --noconfirm -S grub efibootmgr
+[ \$? -ne 0 ] && PauseError 'Install [grub efibootmgr] incomplete.'
+grub-install --target=x86_64-efi --efi-directory=/boot/EFI --bootloader-id=GRUB
+[ \$? -ne 0 ] && PauseError 'grub-install incomplete.'
+grub-mkconfig -o /boot/grub/grub.cfg
+[ \$? -ne 0 ] && PauseError 'grub-mkconfig incomplete.'"
+
+	echo "$rOOTSCRIPT2" >> $CHROOTFILE
+	[ $ROOTABLE == "disable" ] && echo "usermod -s /usr/bin/nologin root" >> $CHROOTFILE
+}
+#=================== GenRootScript() ===================#
+
+
+#=================== PrepareScript() ===================#
 PrepareScript() {
 	WaitReflector
 	local kernel="$KERNELTP"
@@ -917,40 +932,44 @@ PrepareScript() {
 
 	kernel+=" ${KERNELTP}-headers linux-firmware"
 
-	printf "#!/bin/bash\n\n\n" > $INITFILE
-	printf "PauseError() {\n" >> $INITFILE
-	printf "	local pkey\n" >> $INITFILE
-	printf "	echo '#*--------------------------------------------*'\n" >> $INITFILE
-	printf "	echo \"#  Error : \$1  #\"\n" >> $INITFILE
-	printf "	echo '#*--------------------------------------------*'\n" >> $INITFILE
-	printf "	read -p 'Press any key...' pkey\n" >> $INITFILE
-	printf "}\n\n" >> $INITFILE
-	printf "timedatectl set-timezone %s\n" "$TIMEZONE" >> $INITFILE
-	printf "timedatectl set-ntp true\n" >> $INITFILE
-	printf "hwclock --systohc\n" >> $INITFILE
-	printf "pacman -Sy\n" >> $INITFILE
+	local iNIT1="#!/usr/bin/bash\n\n
+PauseError() {
+	local pkey
+	echo '#*--------------------------------------------*'
+	echo \"#  Error : \$1  #\"
+	echo '#*--------------------------------------------*'
+	read -p 'Press any key...' pkey
+}
+
+timedatectl set-timezone $TIMEZONE
+timedatectl set-ntp true
+hwclock --systohc
+pacman -Sy"
+	echo -e "$iNIT1" > $INITFILE
 	GenMountScript
-	printf "pacstrap -K /mnt $PACKBASE ${kernel} $PACKBASE1\n" >> $INITFILE
-	printf "[ \$? -ne 0 ] && PauseError 'pacstrap -K /mnt incomplete.'\n" >> $INITFILE
-	printf "genfstab -U /mnt >> /mnt/etc/fstab\n" >> $INITFILE
+	local iNIT2="pacstrap -K /mnt $PACKBASE ${kernel} $PACKBASE1
+[ \$? -ne 0 ] && PauseError 'pacstrap -K /mnt incomplete.'
+genfstab -U /mnt >> /mnt/etc/fstab"
+	echo "$iNIT2" >> $INITFILE
 	if [ $SWAPID -eq 1 ]; then
-		printf "echo '/swapfile none swap defaults 0 0' >> /mnt/etc/fstab\n" >> $INITFILE
+		echo "echo '/swapfile none swap defaults 0 0' >> /mnt/etc/fstab" >> $INITFILE
 	fi
-	printf "cp /etc/hosts /mnt/etc/hosts\n" >> $INITFILE
-	printf "echo \"FONT=ter-v20n\" > /mnt/etc/vconsole.conf\n" >> $INITFILE
-	printf "ln -sf /usr/share/zoneinfo/$TIMEZONE /mnt/etc/localtime\n" >> $INITFILE
-	printf "cp $CHROOTFILE /mnt${CHROOTFILE}\n" >> $INITFILE
-	printf "chmod 700 /mnt${CHROOTFILE}\n" >> $INITFILE
-	printf "cp /etc/pacman.conf /mnt/etc/pacman.conf\n" >> $INITFILE
-	printf "arch-chroot /mnt $CHROOTFILE\n" >> $INITFILE
-	printf "#rm /mnt$CHROOTFILE\n" >> $INITFILE
-	printf "umount -R /mnt\n" >> $INITFILE
+	local iNIT3="cp /etc/hosts /mnt/etc/hosts
+echo 'FONT=ter-v20n' > /mnt/etc/vconsole.conf
+ln -sf /usr/share/zoneinfo/$TIMEZONE /mnt/etc/localtime
+cp $CHROOTFILE /mnt${CHROOTFILE}
+chmod 700 /mnt${CHROOTFILE}
+cp /etc/pacman.conf /mnt/etc/pacman.conf
+arch-chroot /mnt $CHROOTFILE
+umount -R /mnt"
+	echo "$iNIT3" >> $INITFILE
 	GenRootScript
 	if [ $SWAPID -eq 2 ]; then
 		# ---- swapoff ----
-		printf "swapoff /dev/${DEVDISK}2\n" >> $INITFILE
+		echo "swapoff /dev/${DEVDISK}2" >> $INITFILE
 	fi
 }
+#=================== PrepareScript() ===================#
 
 
 ConfirmInstall() {
