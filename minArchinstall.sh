@@ -618,92 +618,92 @@ DiskPartition() {
 }
 
 
+PartRootWhole() {
+	local devdisk="$1"
+	local -i nroot="$2"
+	local nxpart="$3"
+	echo "parted -s $devdisk mkpart primary ext4 $nxpart 100%"
+	echo "mkfs.ext4 -F ${devdisk}${nroot}"
+	echo "mount ${devdisk}${nroot} /mnt"
+	echo "mkdir -p /mnt/boot/EFI"
+	echo "mount ${devdisk}1 /mnt/boot/EFI"
+}
+
+
+PartRootHome() {
+	local devdisk="$1"
+	local -i nroot="$2"
+	local nxpart="$3"
+	local -i nhome=nroot+1
+	echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB"
+	echo "parted -s $devdisk mkpart primary ext4 20GiB 100%"
+	echo "mkfs.ext4 -F ${devdisk}${nroot}"
+	echo "mkfs.ext4 -F ${devdisk}${nhome}"
+	echo "mount ${devdisk}${nroot} /mnt"
+	echo "mkdir -p /mnt/boot/EFI /mnt/home"
+	echo "mount ${devdisk}1 /mnt/boot/EFI"
+	echo "mount ${devdisk}${nhome} /mnt/home"
+}
+
+
+PartRootVarTmp() {
+	local devdisk="$1"
+	local -i nroot="$2"
+	local nxpart="$3"
+	local -i nvar=nroot+1
+	local -i ntmp=nvar+1
+	local -i nhome=ntmp+1
+	echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB"
+	echo "parted -s $devdisk mkpart primary ext4 20GiB 25GiB"
+	echo "parted -s $devdisk mkpart primary ext4 25GiB 30GiB"
+	echo "parted -s $devdisk mkpart primary ext4 30GiB 100%"
+	echo "mkfs.ext4 -F ${devdisk}${nroot}"
+	echo "mkfs.ext4 -F ${devdisk}${nvar}"
+	echo "mkfs.ext4 -F ${devdisk}${ntmp}"
+	echo "mkfs.ext4 -F ${devdisk}${nhome}"
+	echo "mount ${devdisk}${nroot} /mnt"
+	echo "mkdir -p /mnt/boot/EFI /mnt/{home,var,tmp}"
+	echo "mount ${devdisk}1 /mnt/boot/EFI"
+	echo "mount ${devdisk}${nvar} /mnt/var"
+	echo "mount ${devdisk}${ntmp} /mnt/tmp"
+	echo "mount ${devdisk}${nhome} /mnt/home"
+}
+
+
 GenMountScript() {
 	local endboot="501MiB"
 	local nxpart
+	local nroot
 	local devdisk="/dev/$DEVDISK"
 	echo "parted -s $devdisk mklabel gpt" >> $INITFILE
 	echo "parted -s $devdisk mkpart primary fat32 1MiB $endboot" >> $INITFILE
 	echo "parted -s $devdisk set 1 esp on" >> $INITFILE
 	echo "mkfs.fat -F32 ${devdisk}1" >> $INITFILE
-	if [ $SWAPID -eq 2 ]; then
+	if [ $SWAPID -eq 2 ]; then	# == Select Swap Partition ==
+		nxpart="2.5GiB"
+		nroot=3
 		# ---- create swap partition ----
-		echo "parted -s $devdisk mkpart primary linux-swap $endboot 3GiB" >> $INITFILE
+		echo "parted -s $devdisk mkpart primary linux-swap $endboot $nxpart" >> $INITFILE
 		echo "mkswap ${devdisk}2" >> $INITFILE
-		nxpart="3GiB"
-		case $MNTTID in
-			0 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 100%" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}3" >> $INITFILE
-				echo "mount ${devdisk}3 /mnt" >> $INITFILE
-				echo "mkdir -p /mnt/boot/EFI" >> $INITFILE
-				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
-				;;
-			1 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB" >> $INITFILE
-				echo "parted -s $devdisk mkpart primary ext4 20GiB 100%" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}3" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}4" >> $INITFILE
-				echo "mount ${devdisk}3 /mnt" >> $INITFILE
-				echo "mkdir -p /mnt/boot/EFI /mnt/home" >> $INITFILE
-				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
-				echo "mount ${devdisk}4 /mnt/home" >> $INITFILE
-				;;
-			2 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB" >> $INITFILE
-				echo "parted -s $devdisk mkpart primary ext4 20GiB 25GiB" >> $INITFILE
-				echo "parted -s $devdisk mkpart primary ext4 25GiB 30GiB" >> $INITFILE
-				echo "parted -s $devdisk mkpart primary ext4 30GiB 100%" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}3" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}4" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}5" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}6" >> $INITFILE
-				echo "mount ${devdisk}3 /mnt" >> $INITFILE
-				echo "mkdir -p /mnt/boot/EFI /mnt/{home,var,tmp}" >> $INITFILE
-				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
-				echo "mount ${devdisk}4 /mnt/var" >> $INITFILE
-				echo "mount ${devdisk}5 /mnt/tmp" >> $INITFILE
-				echo "mount ${devdisk}6 /mnt/home" >> $INITFILE
-				;;
-		esac
 		echo "swapon ${devdisk}2" >> $INITFILE
-	else
+	else		# ===== NoSwap and Swapfile =====
 		nxpart=$endboot
-		case $MNTTID in
-			0 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 100%" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}2" >> $INITFILE
-				echo "mount ${devdisk}2 /mnt" >> $INITFILE
-				echo "mkdir -p /mnt/boot/EFI" >> $INITFILE
-				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
-				;;
-			1 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB" >> $INITFILE
-				echo "parted -s $devdisk mkpart primary ext4 20GiB 100%" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}2" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}3" >> $INITFILE
-				echo "mount ${devdisk}2 /mnt" >> $INITFILE
-				echo "mkdir -p /mnt/boot/EFI /mnt/home" >> $INITFILE
-				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
-				echo "mount ${devdisk}3 /mnt/home" >> $INITFILE
-				;;
-			2 ) echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB" >> $INITFILE
-				echo "parted -s $devdisk mkpart primary ext4 20GiB 25GiB" >> $INITFILE
-				echo "parted -s $devdisk mkpart primary ext4 25GiB 30GiB" >> $INITFILE
-				echo "parted -s $devdisk mkpart primary ext4 30GiB 100%" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}2" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}3" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}4" >> $INITFILE
-				echo "mkfs.ext4 -F ${devdisk}5" >> $INITFILE
-				echo "mount ${devdisk}2 /mnt" >> $INITFILE
-				echo "mkdir -p /mnt/boot/EFI /mnt/{home,var,tmp}" >> $INITFILE
-				echo "mount ${devdisk}1 /mnt/boot/EFI" >> $INITFILE
-				echo "mount ${devdisk}3 /mnt/var" >> $INITFILE
-				echo "mount ${devdisk}4 /mnt/tmp" >> $INITFILE
-				echo "mount ${devdisk}5 /mnt/home" >> $INITFILE
-				;;
-		esac
-		# ---- make /swapfile ----
-		if [ $SWAPID -eq 1 ]; then
-			echo "dd if=/dev/zero of=/mnt/swapfile bs=1M count=2560" >> $INITFILE
-			echo "chmod 600 /mnt/swapfile" >> $INITFILE
-			echo "mkswap /mnt/swapfile" >> $INITFILE
-		fi
+		nroot=2
+	fi
+	case $MNTTID in
+		0 ) echo "$(PartRootWhole $devdisk $nroot $nxpart)" >> $INITFILE
+			;;	# ===== Partition type [ / ] =====
+		1 ) echo "$(PartRootHome $devdisk $nroot $nxpart)" >> $INITFILE
+			;;	# ===== Partition type [ / , /home ] =====
+		2 ) echo "$(PartRootVarTmp $devdisk $nroot $nxpart)" >> $INITFILE
+			;;	# ===== Partition type [ / , /home , /var , /tmp ] =====
+	esac
+
+	# ---- make /swapfile ----
+	if [ $SWAPID -eq 1 ]; then
+		echo "dd if=/dev/zero of=/mnt/swapfile bs=1M count=2048" >> $INITFILE
+		echo "chmod 600 /mnt/swapfile" >> $INITFILE
+		echo "mkswap /mnt/swapfile" >> $INITFILE
 	fi
 }
 
@@ -973,17 +973,14 @@ umount -R /mnt"
 
 
 ConfirmInstall() {
-	local mch
 	local cmd
-	local rs
 	cmd="$STDDIALOG \
-		--yes-button 'Manual'
-		--no-button 'Run now'
+		--yes-button 'Run now'
+		--no-button 'Manual'
 		--title 'Install Arch linux' \
 		--yesno 'Run the script by your hand manually...?' 8 48 ${SWAPSTD}"
-	mch=`eval $cmd`
-	rs=$?
-	if [ $rs -eq 0 ] ; then
+	`eval $cmd`
+	if [ $? -eq 1 ] ; then
 		MsgBox 'Install Arch Linux' "You can press Ctl+Alt+Fn to switch another console, then run $INITFILE."
 	else
 		$INITFILE
@@ -1075,7 +1072,7 @@ ArchDesktop() {
 	local rs=0
 	local initch='mate'
 	cmd="$STDDIALOG --nocancel \
-		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 17 80 9"
+		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 18 80 10"
 	for ep in $DESKLIST ; do
 		cmd+=" '$ep' '${DESKDES[$ep]}'"
 	done
@@ -1184,6 +1181,34 @@ fi
 #=               Start main menu                =
 #------------------------------------------------
 tput civis
+declare VGATYPE=`lspci -k | grep -i ' vga '`
+declare CPUTYPE=`lscpu | grep -i 'Model name'`
+
+echo "$VGATYPE" | grep -i ' nvidia '
+if [ $? -eq 0 ] ; then
+	VDOID=5		# Detec NvidiaGPU
+else
+	echo "$VGATYPE" | grep -i ' radeon '
+	if [ $? -eq 0 ] ; then
+		VDOID=2		# Dectect RadeonHD
+	else
+		echo "$VGATYPE" | grep -i ' amd '
+		if [ $? -eq 0 ] ; then
+			VDOID=3		# Detect AMDGPU
+		fi
+	fi
+fi
+
+echo "$CPUTYPE" | grep -i ' intel '
+if [ $? -eq 0 ] ; then
+	OPCHCK["intel-ucode"]="on"		# Detect INTEL CPU
+else 
+	echo "$CPUTYPE" | grep -i ' amd '
+	if [ $? -eq 0 ] ; then
+		OPCHCK["amd-ucode"]="on"		# Detect AMD CPU
+	fi
+fi
+
 until [ $RS != 0 ]; do		# if rs==1 then QUIT
 	MainMenu
 	if  [ $RS == 0 ]; then
