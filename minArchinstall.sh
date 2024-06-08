@@ -1193,19 +1193,19 @@ else
 		VDOID=2		# Dectect RadeonHD
 	else
 		echo "$VGATYPE" | grep -i ' amd '
-		if [ $? -eq 0 ] ; then
-			VDOID=3		# Detect AMDGPU
-		fi
+		[ $? -eq 0 ] &&	VDOID=3		# Detect AMDGPU
 	fi
 fi
 
 echo "$CPUTYPE" | grep -i ' intel '
 if [ $? -eq 0 ] ; then
 	OPCHCK["intel-ucode"]="on"		# Detect INTEL CPU
+	CLILIST+=" intel-ucode"
 else 
 	echo "$CPUTYPE" | grep -i ' amd '
 	if [ $? -eq 0 ] ; then
 		OPCHCK["amd-ucode"]="on"		# Detect AMD CPU
+		CLILIST+=" amd-ucode"
 	fi
 fi
 
