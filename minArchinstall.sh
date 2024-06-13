@@ -847,7 +847,7 @@ systemctl enable lightdm"
 			;;		# openbox
 	esac
 
-	echo "echo \"$mONITOR1\" > /etc/X11/xorg.conf.d/01-monitor.conf" >> $CHROOTFILE
+	[ "$RESOLUTION" != 'not define' ] && echo "echo \"$mONITOR1\" > /etc/X11/xorg.conf.d/01-monitor.conf" >> $CHROOTFILE
 	echo "pacman --noconfirm -S ${VDOPACK[$VDOID]}" >> $CHROOTFILE
 	echo "[ \$? -ne 0 ] && PauseError 'Install [${VDOPACK[$VDOID]}] incomplete.'" >> $CHROOTFILE
 	if [ $AUDID != "none" ]; then
@@ -1084,6 +1084,30 @@ ArchDesktop() {
 }
 
 
+Monitor_Resolution() {
+	local mch
+	local num=`echo "$DESKLIST" | wc -w`
+	local cmd
+	local rs=0
+	local initch='mate'
+	cmd="$STDDIALOG --nocancel \
+		--title 'Default resolution for Monitor' --default-item '$RESOLUTION' --menu 'Select the resolution:-' 18 80 10 \
+			'not define' '' \
+			'3840x2160'	 '' \
+			'2560x1080'  '' \
+			'1920x1440'  '' \
+			'1920x1080'  '' \
+			'1600x1200'  '' \
+			'1400x1050'  '' \
+			'1280x1024'  '' \
+			'1280x960'   '' \
+			'1024x768'   '' ${SWAPSTD}"
+	mch=`eval $cmd`
+	rs=$?
+	[ $rs -eq 0 ] && RESOLUTION=$mch
+}
+
+
 ArchGUI() {
 	local mch
 	local cmd
@@ -1091,11 +1115,12 @@ ArchGUI() {
 	local initch='V'
 	while [ $rs -eq 0 ]; do
 		cmd="$STDDIALOG --ok-button 'Setting' --cancel-button 'Install' \
-			--title 'Graphical desktop environment' --default-item '$initch' --menu 'Configuration setting:-' 12 80 4 \
+			--title 'Graphical desktop environment' --default-item '$initch' --menu 'Configuration setting:-' 13 80 5 \
 			'V' 'Video Display.........[${VDODES[$VDOID]}]' \
 			'S' 'Sound Audio...........[$AUDID]' \
 			'A' 'Additional packages...[as your wish]' \
-			'D' 'Desktop Environment...[$DESKTYPE]' ${SWAPSTD}"
+			'D' 'Desktop Environment...[$DESKTYPE]' ${SWAPSTD} \
+			'M' 'Monitor resolution....[$RESOLUTION]'"
 		mch=`eval $cmd`
 		rs=$?
 		if [ $rs -eq 0 ]; then
@@ -1107,6 +1132,8 @@ ArchGUI() {
 				'A' ) Xadditional
 					;;
 				'D' ) ArchDesktop
+					;;
+				'M' ) Monitor_Resolution
 					;;
 			esac
 			initch=$mch
