@@ -215,7 +215,7 @@ declare NUMDEV=0
 declare -a DSKDEV
 declare -a DSKSIZ
 
-BACKTITLE="minArchinstall version 1.0.0 :  Bash Shell Script for intalling Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
+BACKTITLE="minArchinstall version 1.0.1 :  Bash Shell Script for intalling Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
 STDDIALOG="whiptail --backtitle \"$BACKTITLE\""
 
 MainMenu() {
@@ -897,6 +897,7 @@ chown ${SUPERUSR}:users /home/${SUPERUSR}/.vimrc
 chmod 600 /home/${SUPERUSR}/.vimrc"
 
 	echo -e "$rOOTSCRIPT1" > $CHROOTFILE
+	[ ${SRVCHK["openssh"]} == "on" ] && echo "systemctl enable sshd" > $CHROOTFILE
 	if [ "${OPCHCK["neofetch"]}" == "on" ] ; then
 		echo "echo 'neofetch' >> /home/${SUPERUSR}/.bash_profile" >> $CHROOTFILE
 	else
