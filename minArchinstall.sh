@@ -1151,7 +1151,7 @@ InstallArch() {
 	local cmd
 	local rs=0
 	cmd="$STDDIALOG --cancel-button 'Back' \
-		--title 'Arch Linux Installation' --default-item 'cli' --menu 'Warning...!\nAll data in /dev/$DEVDISK will be erased :-' 10 50 2 \
+		--title 'Arch Linux Installation' --default-item 'cli' --menu 'Warning...!  All data in /dev/$DEVDISK will be erased :-' 10 69 2 \
 		'cli'  'Command Line Interface / No Graphical' \
 		'gui'  'Graphical User Interface' ${SWAPSTD}"
 	mch=`eval $cmd`
