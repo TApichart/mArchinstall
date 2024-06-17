@@ -215,7 +215,7 @@ declare NUMDEV=0
 declare -a DSKDEV
 declare -a DSKSIZ
 
-BACKTITLE="minArchinstall version 1.0.1 :  Bash Shell Script for intalling Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
+BACKTITLE="minArchinstall version 1.0.1 :  Bash Shell Script for installing Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
 STDDIALOG="whiptail --backtitle \"$BACKTITLE\""
 
 MainMenu() {
@@ -223,30 +223,27 @@ MainMenu() {
 	local cmd
 	local initdev="none"
 	[ "$DEVDISK" != "none" ] && initdev="/dev/$DEVDISK"
-	cmd="$STDDIALOG --cancel-button 'Quit' \
-		--title 'Main Menu' --default-item \"${MAINCH}\" --menu 'Select menu:-' 18 62 10 \
-        '0' 'Keyboard Map...............[$KEYMAP]' \
-		'1' 'Timezone ..................[$TIMEZONE]' \
-		'2' 'Server mirror list.........[$MIRRORTH]' \
-		'3' 'Hostname ..................[$HOSTNAME]' \
-		'4' 'User and password .........[$SUPERUSR]' \
-		'5' 'Type of Linux Kernel ......[$KERNELTP]' \
-		'6' 'Optional packages .........[as your wish]' \
-		'7' 'Server packages............[as your wish]' \
-		'8' 'Disk partitions............[$initdev]' \
+	cmd="$STDDIALOG --cancel-button 'Quit'
+		--title 'Main Menu' --default-item \"${MAINCH}\" --menu 'Select menu:-' 18 62 10
+        '0' 'Keyboard Map...............[$KEYMAP]'
+		'1' 'Timezone ..................[$TIMEZONE]'
+		'2' 'Server mirror list.........[$MIRRORTH]'
+		'3' 'Hostname ..................[$HOSTNAME]'
+		'4' 'User and password .........[$SUPERUSR]'
+		'5' 'Type of Linux Kernel ......[$KERNELTP]'
+		'6' 'Optional packages .........[as your wish]'
+		'7' 'Server packages............[as your wish]'
+		'8' 'Disk partitions............[$initdev]'
 		'9' '[...Next step to Install...]' ${SWAPSTD}"
 	mch=`eval $cmd`
 	RS=$?
-	if [ $RS -eq 0 ]; then
-		MAINCH=$mch
-	fi
+	[ $RS -eq 0 ] && MAINCH=$mch
 }
 
 
 TimeZone() {
 	local mch
 	local cmd
-	local rs
 	local cl=`cat $TZFILE | wc -l`
 	local line
 	cmd="$STDDIALOG \
@@ -257,10 +254,7 @@ TimeZone() {
 	done < $TZFILE
 	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	if [ $rs -eq 0 ]; then
-		TIMEZONE=$mch
-	fi
+	[ $? -eq 0 ] && TIMEZONE=$mch
 }
 
 
@@ -288,18 +282,14 @@ Hostname() {
 LinuxKernel() {
 	local mch
 	local cmd
-	local rs
-	cmd="$STDDIALOG \
-		--title 'LINUX KERNEL' --default-item \"${KERNELTP}\" --menu 'Select type of kernel:-' 11 80 4 \
-		'linux' 'Stable-Vanilla Linux kernel and modules, with patches' \
-		'linux-lts' 'Long-term support(LTS)' \
-		'linux-hardened' 'A security-focused Linux kernel' \
+	cmd="$STDDIALOG
+		--title 'LINUX KERNEL' --default-item \"${KERNELTP}\" --menu 'Select type of kernel:-' 11 80 4
+		'linux' 'Stable-Vanilla Linux kernel and modules, with patches'
+		'linux-lts' 'Long-term support(LTS)'
+		'linux-hardened' 'A security-focused Linux kernel'
 		'linux-zen' 'Result of a collaborative effort of kernel hackers' ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	if [ $rs == 0 ] ; then
-		KERNELTP=$mch
-	fi
+	[ $? -eq 0 ] && KERNELTP=$mch
 }
 
 
@@ -340,16 +330,12 @@ CheckPassword() {
 SuperUserName() {
 	local mch
 	local cmd
-	local rs
     tput cvvis
-	cmd="$STDDIALOG  \
+	cmd="$STDDIALOG
 		--title 'Define user name for Super User' --inputbox 'User name as Admin user:-' 7 40 '$SUPERUSR' ${SWAPSTD}"
 	mch=`eval $cmd`
     tput civis
-	rs=$?
-	if [ $rs -eq 0 ] ; then
-		SUPERUSR=$mch
-	fi
+	[ $? -eq 0 ] && SUPERUSR=$mch
 }
 
 
@@ -364,7 +350,7 @@ SuperPassword() {
 		initpass="$SUPERPAS"
 	fi
     tput cvvis
-	cmd="$STDDIALOG  \
+	cmd="$STDDIALOG
 		--title 'Set password for [$SUPERUSR]' 
 		--passwordbox 'Password should be at least 8 characters long with 1 uppercase, and 1 lowercase:-' 8 45 '$initpass' ${SWAPSTD}"
 	mch=`eval $cmd`
@@ -389,7 +375,7 @@ RootPassword() {
 	local rs
 	local initpass=$ROOTPASS
     tput cvvis
-	cmd="$STDDIALOG  \
+	cmd="$STDDIALOG
 		--title \"Set root's password\" --passwordbox \"Enter password:-\" 11 48 '$initpass' ${SWAPSTD}"
 	mch=`eval $cmd`
     tput civis
@@ -413,9 +399,9 @@ RootSelect() {
 	local cmd
 	local rs=0
 	local initch="$ROOTABLE"
-	cmd="$STDDIALOG --cancel-button 'Back' \
-		--title 'Setting root user' --default-item \"$initch\" --menu 'Select menu:-' 11 65 3 \
-		'disable'   'Disable - root can not login' \
+	cmd="$STDDIALOG --cancel-button 'Back'
+		--title 'Setting root user' --default-item \"$initch\" --menu 'Select menu:-' 11 65 3
+		'disable'   'Disable - root can not login'
 		'enable'    'Enable - set password for root' ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
@@ -458,10 +444,10 @@ UserAccout() {
 			passval=$(RepeatAsterisk "$SUPERPAS")
 		fi
 
-		cmd="$STDDIALOG --cancel-button 'Back' \
-			--title 'User account manament' --default-item \"$initch\" --menu 'Select menu:-' 11 65 3 \
-			'root'   'Set password for root User........[$initrt]' \
-			'user'   'Define user name for Super User...[$SUPERUSR]' \
+		cmd="$STDDIALOG --cancel-button 'Back'
+			--title 'User account manament' --default-item \"$initch\" --menu 'Select menu:-' 11 65 3
+			'root'   'Set password for root User........[$initrt]'
+			'user'   'Define user name for Super User...[$SUPERUSR]'
 			'passwd' 'Set password for Super User.......[$passval]' ${SWAPSTD}"
 		mch=`eval $cmd`
 		rs=$?
@@ -483,8 +469,8 @@ UserAccout() {
 OptionalCLI(){
 	local -A mch
 	local num=`echo "$OPTIONS" | wc -w`
-	local cmd="$STDDIALOG \
-			--title 'Optional Command Line Packages' \
+	local cmd="$STDDIALOG
+			--title 'Optional Command Line Packages'
 			--checklist 'These packages are the basics, has already included after installation:\n[ $PACKBASE1 ]\nChoose additional packages to install:' 22 80 $num"
 	for ep in $OPTIONS ; do
 		local pn=${OPDESC["$ep"]}
@@ -510,8 +496,8 @@ OptionalCLI(){
 ServerPackages(){
 	local -A mch
 	local num=`echo "$OPTSERV" | wc -w`
-	local cmd="$STDDIALOG \
-			--title 'Server / Service Packages list' \
+	local cmd="$STDDIALOG
+			--title 'Server / Service Packages list'
 			--checklist 'Choose packages to install:' 22 80 $num"
 	for ep in $OPTSERV ; do
 		local pn=${SRVDES["$ep"]}
@@ -537,56 +523,48 @@ ServerPackages(){
 SelectDevDisk() {
 	local mch
 	local cmd
-	local rs
 	local initch
 	[ ! "$DEVDISK" == "none" ] && initch="$DEVDISK"
-	cmd="$STDDIALOG \
-		--title 'Select the target disk for Arch linux.' --default-item \"$initch\" --menu 'Choose Disk device :-' 12 45 4"
+	cmd="$STDDIALOG
+		--title 'Select the target disk for Arch linux.'
+		--default-item \"$initch\" --menu 'Choose Disk device :-' 12 45 4"
 	for i in `seq 1 1 $NUMDEV` ; do
 		cmd+=" '${DSKDEV[$i]}' '${DSKSIZ[$i]}'"
 	done
 	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	if [ $rs -eq 0 ]; then
-		DEVDISK="$mch"
-	fi
+	[ $? -eq 0 ] &&	DEVDISK="$mch"
 }
 
 
 SwapType() {
 	local mch
 	local cmd
-	local rs
-	cmd="$STDDIALOG \
-		--title 'How to manage swap memory?' --default-item \"$SWAPID\" --menu 'Swap as:-\nIf using swap, it is fix at 2Gb' 12 35 4"
+	cmd="$STDDIALOG
+		--title 'How to manage swap memory?' 
+		--default-item \"$SWAPID\" 
+		--menu 'Swap as:-\nIf using swap, it is fix at 2Gb' 12 35 4"
 	for i in `seq 0 1 2` ; do
 		cmd+=" '$i' '${SWAPDES[$i]}'"
 	done
 	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	if [ $rs -eq 0 ]; then
-		SWAPID=$mch
-	fi
+	[ $? -eq 0 ] &&	SWAPID=$mch
 }
 
 
 MountVolume() {
 	local mch
 	local cmd
-	local rs
-	cmd="$STDDIALOG \
-		--title 'Set the partitioning format' --default-item \"$MNTTID\" --menu 'Mount Volume as:-' 12 35 4"
+	cmd="$STDDIALOG
+		--title 'Set the partitioning format' 
+		--default-item \"$MNTTID\" --menu 'Mount Volume as:-' 12 35 4"
 	for i in `seq 0 1 2` ; do
 		cmd+=" '$i' '${MNTDES[$i]}'"
 	done
 	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	if [ $rs -eq 0 ]; then
-		MNTTID=$mch
-	fi
+	[ $rs -eq 0 ] && MNTTID=$mch
 }
 
 
@@ -596,10 +574,10 @@ DiskPartition() {
 	local rs=0
 	local initch='swap'
 	while [ $rs -eq 0 ]; do
-		cmd="$STDDIALOG --cancel-button 'Back' \
-			--title 'Disk partitions' --default-item '$initch' --menu 'Warning...!\nAll data in the target disk will be erased :-' 15 60 8 \
-			'swap'  'Swap space and paging...[${SWAPDES[$SWAPID]}]' \
-			'dev'   'Disk device to install..[$DEVDISK]' \
+		cmd="$STDDIALOG --cancel-button 'Back'
+			--title 'Disk partitions' --default-item '$initch' --menu 'Warning...!\nAll data in the target disk will be erased :-' 15 60 8
+			'swap'  'Swap space and paging...[${SWAPDES[$SWAPID]}]'
+			'dev'   'Disk device to install..[$DEVDISK]'
 			'mount' 'Mount volume ...........[ ${MNTDES[$MNTTID]} ]' ${SWAPSTD}"
 		mch=`eval $cmd`
 		rs=$?
@@ -618,12 +596,22 @@ DiskPartition() {
 }
 
 
+declare ROOTPARTLABEL="\n# ===== Root Partition [ / ] ===== #"
+declare HOMEPARTLABEL="\n# ===== Home Partition [ /home ] ===== #"
+declare TMPPARTLABEL="\n# ===== Temporary Partition [ /tmp ] ===== #"
+declare VARPARTLABEL="\n# ===== Var Partition [ /var ] ===== #"
+declare MOUNTLABEL="\n# ===== Mount Root Partition as /mnt ===== #"
+declare FORMATLABEL="\n# ===== FORMAT PATITIONs ===== #"
+
 PartRootWhole() {
 	local devdisk="$1"
 	local -i nroot="$2"
 	local nxpart="$3"
+	echo -e "$ROOTPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 $nxpart 100%"
+	echo -e "$FORMATLABEL"
 	echo "mkfs.ext4 -F ${devdisk}${nroot}"
+	echo -e "$MOUNTLABEL"
 	echo "mount ${devdisk}${nroot} /mnt"
 	echo "mkdir -p /mnt/boot/EFI"
 	echo "mount ${devdisk}1 /mnt/boot/EFI"
@@ -635,10 +623,14 @@ PartRootHome() {
 	local -i nroot="$2"
 	local nxpart="$3"
 	local -i nhome=nroot+1
+	echo -e "$ROOTPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB"
+	echo -e "$HOMEPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 20GiB 100%"
+	echo -e "$FORMATLABEL"
 	echo "mkfs.ext4 -F ${devdisk}${nroot}"
 	echo "mkfs.ext4 -F ${devdisk}${nhome}"
+	echo -e "$MOUNTLABEL"
 	echo "mount ${devdisk}${nroot} /mnt"
 	echo "mkdir -p /mnt/boot/EFI /mnt/home"
 	echo "mount ${devdisk}1 /mnt/boot/EFI"
@@ -653,14 +645,20 @@ PartRootVarTmp() {
 	local -i nvar=nroot+1
 	local -i ntmp=nvar+1
 	local -i nhome=ntmp+1
+	echo -e "$ROOTPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB"
+	echo -e "$HOMEPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 20GiB 25GiB"
+	echo -e "$TMPPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 25GiB 30GiB"
+	echo -e "$VARPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 30GiB 100%"
+	echo -e "$FORMATLABEL"
 	echo "mkfs.ext4 -F ${devdisk}${nroot}"
 	echo "mkfs.ext4 -F ${devdisk}${nvar}"
 	echo "mkfs.ext4 -F ${devdisk}${ntmp}"
 	echo "mkfs.ext4 -F ${devdisk}${nhome}"
+	echo -e "$MOUNTLABEL"
 	echo "mount ${devdisk}${nroot} /mnt"
 	echo "mkdir -p /mnt/boot/EFI /mnt/{home,var,tmp}"
 	echo "mount ${devdisk}1 /mnt/boot/EFI"
@@ -675,27 +673,34 @@ GenMountScript() {
 	local nxpart
 	local nroot
 	local devdisk="/dev/$DEVDISK"
-	echo "parted -s $devdisk mklabel gpt" >> $INITFILE
-	echo "parted -s $devdisk mkpart primary fat32 1MiB $endboot" >> $INITFILE
-	echo "parted -s $devdisk set 1 esp on" >> $INITFILE
-	echo "mkfs.fat -F32 ${devdisk}1" >> $INITFILE
+	local eFIPART="\n# ===== EFI Boot Partition ===== #
+parted -s $devdisk mklabel gpt
+parted -s $devdisk mkpart primary fat32 1MiB $endboot
+parted -s $devdisk set 1 esp on
+mkfs.fat -F32 ${devdisk}1"
+	echo -e "$eFIPART" >> $INITFILE
 	if [ $SWAPID -eq 2 ]; then	# == Select Swap Partition ==
 		nxpart="2.5GiB"
 		nroot=3
 		# ---- create swap partition ----
-		echo "parted -s $devdisk mkpart primary linux-swap $endboot $nxpart" >> $INITFILE
-		echo "mkswap ${devdisk}2" >> $INITFILE
-		echo "swapon ${devdisk}2" >> $INITFILE
+		local sWAPPART="\n# ===== Swap Partition ===== #
+parted -s $devdisk mkpart primary linux-swap $endboot $nxpart
+mkswap ${devdisk}2
+swapon ${devdisk}2"
+		echo -e "$sWAPPART" >> $INITFILE
 	else		# ===== NoSwap and Swapfile =====
 		nxpart=$endboot
 		nroot=2
 	fi
 	case $MNTTID in
-		0 ) echo "$(PartRootWhole $devdisk $nroot $nxpart)" >> $INITFILE
+		0 ) 
+			echo "$(PartRootWhole $devdisk $nroot $nxpart)" >> $INITFILE
 			;;	# ===== Partition type [ / ] =====
-		1 ) echo "$(PartRootHome $devdisk $nroot $nxpart)" >> $INITFILE
+		1 )
+			echo "$(PartRootHome $devdisk $nroot $nxpart)" >> $INITFILE
 			;;	# ===== Partition type [ / , /home ] =====
-		2 ) echo "$(PartRootVarTmp $devdisk $nroot $nxpart)" >> $INITFILE
+		2 ) 
+			echo "$(PartRootVarTmp $devdisk $nroot $nxpart)" >> $INITFILE
 			;;	# ===== Partition type [ / , /home , /var , /tmp ] =====
 	esac
 
@@ -891,8 +896,13 @@ useradd -m -g users -G wheel,storage,power,audio,video ${SUPERUSR}
 echo '${SUPERUSR}:${SUPERPAS}' | chpasswd
 sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers
 sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/g' /etc/sudoers
-echo 'source \$VIMRUNTIME/defaults.vim' > /home/${SUPERUSR}/.vimrc
-echo 'set number' >> /home/${SUPERUSR}/.vimrc
+echo \"source \\\$VIMRUNTIME/defaults.vim 
+set number
+syntax on
+set showmatch
+set ruler
+set smarttab
+set ts=4 sw=4\" > /home/${SUPERUSR}/.vimrc
 chown ${SUPERUSR}:users /home/${SUPERUSR}/.vimrc
 chmod 600 /home/${SUPERUSR}/.vimrc"
 
@@ -946,15 +956,11 @@ timedatectl set-timezone $TIMEZONE
 timedatectl set-ntp true
 hwclock --systohc
 pacman -Sy"
-	echo -e "$iNIT1" > $INITFILE
-	GenMountScript
+
 	local iNIT2="pacstrap -K /mnt $PACKBASE ${kernel} $PACKBASE1
 [ \$? -ne 0 ] && PauseError 'pacstrap -K /mnt incomplete.'
 genfstab -U /mnt >> /mnt/etc/fstab"
-	echo "$iNIT2" >> $INITFILE
-	if [ $SWAPID -eq 1 ]; then
-		echo "echo '/swapfile none swap defaults 0 0' >> /mnt/etc/fstab" >> $INITFILE
-	fi
+
 	local iNIT3="cp /etc/hosts /mnt/etc/hosts
 echo 'FONT=ter-v20n' > /mnt/etc/vconsole.conf
 ln -sf /usr/share/zoneinfo/$TIMEZONE /mnt/etc/localtime
@@ -963,6 +969,16 @@ chmod 700 /mnt${CHROOTFILE}
 cp /etc/pacman.conf /mnt/etc/pacman.conf
 arch-chroot /mnt $CHROOTFILE
 umount -R /mnt"
+
+	echo -e "$iNIT1" > $INITFILE
+	GenMountScript
+	echo -e "\n# =====  PACSTRAP - Begining of Arch Installation ===== #" >> $INITFILE
+	echo "$iNIT2" >> $INITFILE
+	if [ $SWAPID -eq 1 ]; then
+		echo "echo '/swapfile none swap defaults 0 0' >> /mnt/etc/fstab" >> $INITFILE
+	fi
+
+	echo -e "\n# ===== Prepare some configuration ===== #" >> $INITFILE
 	echo "$iNIT3" >> $INITFILE
 	GenRootScript
 	if [ $SWAPID -eq 2 ]; then
@@ -975,10 +991,10 @@ umount -R /mnt"
 
 ConfirmInstall() {
 	local cmd
-	cmd="$STDDIALOG \
+	cmd="$STDDIALOG
 		--yes-button 'Run now'
 		--no-button 'Manual'
-		--title 'Install Arch linux' \
+		--title 'Install Arch linux'
 		--yesno 'Run the script by your hand manually...?' 8 48 ${SWAPSTD}"
 	`eval $cmd`
 	if [ $? -eq 1 ] ; then
@@ -996,8 +1012,8 @@ ArchCLI() {
 	local mch
 	local cmd
 	local rs=0
-	cmd="$STDDIALOG \
-		--title 'Arch Linux Installation' \
+	cmd="$STDDIALOG
+		--title 'Arch Linux Installation'
 		--yesno 'Warning...!\nAll data in /dev/$DEVDISK will be erased, then install...' 7 40 ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
@@ -1012,7 +1028,7 @@ SetVGA() {
 	local mch
 	local cmd
 	local rs=0
-	cmd="$STDDIALOG \
+	cmd="$STDDIALOG
 		--title 'VGA Configuration' --default-item '$VDOID' --menu 'Video setting:-' 16 80 8"
 	for i in `seq 1 1 6` ; do
 		cmd+=" '$i' '${VDODES[$i]}'"
@@ -1028,9 +1044,9 @@ SetAudio() {
 	local mch
 	local cmd
 	local rs=0
-	cmd="$STDDIALOG \
-		--title 'Sound/Audio Setting' --default-item '$AUDID' --menu 'Sound setting:-' 10 60 2 \
-		'none'        'Disable/No sound' \
+	cmd="$STDDIALOG
+		--title 'Sound/Audio Setting' --default-item '$AUDID' --menu 'Sound setting:-' 10 60 2
+		'none'        'Disable/No sound'
 		'pulseaudio'  'A featureful, general-purpose sound server' ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
@@ -1040,10 +1056,10 @@ SetAudio() {
 
 Xadditional() {
 	local rs=0
-	local -A mch
+	local mch
 	local num=`echo "$XPKLIST" | wc -w`
-	local cmd="$STDDIALOG \
-			--title 'Optional X Desktop Packages' \
+	local cmd="$STDDIALOG
+			--title 'Optional X Desktop Packages'
 			--checklist 'Application Packages:\n[ $PACKBASE1 ]\nChoose additional packages to install:' 22 80 $num"
 	for ep in $XPKLIST ; do
 		local pn=${XPKDES["$ep"]}
@@ -1072,7 +1088,7 @@ ArchDesktop() {
 	local cmd
 	local rs=0
 	local initch='mate'
-	cmd="$STDDIALOG --nocancel \
+	cmd="$STDDIALOG --nocancel
 		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 18 80 10"
 	for ep in $DESKLIST ; do
 		cmd+=" '$ep' '${DESKDES[$ep]}'"
@@ -1088,23 +1104,21 @@ Monitor_Resolution() {
 	local mch
 	local num=`echo "$DESKLIST" | wc -w`
 	local cmd
-	local rs=0
 	local initch='mate'
-	cmd="$STDDIALOG --nocancel \
-		--title 'Default resolution for Monitor' --default-item '$RESOLUTION' --menu 'Select the resolution:-' 18 80 10 \
-			'not define' '' \
-			'3840x2160'	 '' \
-			'2560x1080'  '' \
-			'1920x1440'  '' \
-			'1920x1080'  '' \
-			'1600x1200'  '' \
-			'1400x1050'  '' \
-			'1280x1024'  '' \
-			'1280x960'   '' \
+	cmd="$STDDIALOG --nocancel
+		--title 'Default resolution for Monitor' --default-item '$RESOLUTION' --menu 'Select the resolution:-' 18 80 10
+			'not define' ''
+			'3840x2160'	 ''
+			'2560x1080'  ''
+			'1920x1440'  ''
+			'1920x1080'  ''
+			'1600x1200'  ''
+			'1400x1050'  ''
+			'1280x1024'  ''
+			'1280x960'   ''
 			'1024x768'   '' ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	[ $rs -eq 0 ] && RESOLUTION=$mch
+	[ $? -eq 0 ] && RESOLUTION=$mch
 }
 
 
@@ -1114,12 +1128,12 @@ ArchGUI() {
 	local rs=0
 	local initch='V'
 	while [ $rs -eq 0 ]; do
-		cmd="$STDDIALOG --ok-button 'Setting' --cancel-button 'Install' \
-			--title 'Graphical desktop environment' --default-item '$initch' --menu 'Configuration setting:-' 13 80 5 \
-			'V' 'Video Display.........[${VDODES[$VDOID]}]' \
-			'S' 'Sound Audio...........[$AUDID]' \
-			'A' 'Additional packages...[as your wish]' \
-			'D' 'Desktop Environment...[$DESKTYPE]' ${SWAPSTD} \
+		cmd="$STDDIALOG --ok-button 'Setting' --cancel-button 'Install'
+			--title 'Graphical desktop environment' --default-item '$initch' --menu 'Configuration setting:-' 13 80 5
+			'V' 'Video Display.........[${VDODES[$VDOID]}]'
+			'S' 'Sound Audio...........[$AUDID]'
+			'A' 'Additional packages...[as your wish]'
+			'D' 'Desktop Environment...[$DESKTYPE]' ${SWAPSTD}
 			'M' 'Monitor resolution....[$RESOLUTION]'"
 		mch=`eval $cmd`
 		rs=$?
@@ -1150,9 +1164,9 @@ InstallArch() {
 	local mch
 	local cmd
 	local rs=0
-	cmd="$STDDIALOG --cancel-button 'Back' \
-		--title 'Arch Linux Installation' --default-item 'cli' --menu 'Warning...!  All data in /dev/$DEVDISK will be erased :-' 10 69 2 \
-		'cli'  'Command Line Interface / No Graphical' \
+	cmd="$STDDIALOG --cancel-button 'Back'
+		--title 'Arch Linux Installation' --default-item 'cli' --menu 'Warning...!  All data in /dev/$DEVDISK will be erased :-' 10 69 2
+		'cli'  'Command Line Interface / No Graphical'
 		'gui'  'Graphical User Interface' ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
