@@ -1121,7 +1121,7 @@ ArchDesktop() {
 	local rs=0
 	local initch='mate'
 	cmd="$STDDIALOG --nocancel
-		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 18 80 10"
+		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 19 80 11"
 	for ep in $DESKLIST ; do
 		cmd+=" '$ep' '${DESKDES[$ep]}'"
 	done
