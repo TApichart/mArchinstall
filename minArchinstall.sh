@@ -752,6 +752,7 @@ cp /etc/polybar/config.ini $uSRCFG/polybar
 chmod +x $uSRCFG/bwpwmrc
 echo 'pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf &
 nitrogen --restore &
+sed -i 's/bspc rule/#bspc rule/g' $uSRCFG/bspwm/bspwmrc
 pgrep -x polybar > /dev/null || polybar &' >> $uSRCFG/bspwm/bspwmrc
 sed -i 's/urxvt/mate-terminal --hide-menubar/g' $uSRCFG/sxhkd/sxhkdrc
 echo 'super + e
