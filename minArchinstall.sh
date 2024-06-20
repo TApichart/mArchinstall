@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================================== #
-# |                   minArchinstall.sh   Version 1.0.1                                           |
+# |                   minArchinstall.sh   Version 1.0.2                                           |
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
@@ -56,7 +56,6 @@ PERLLINUX="perl-linux-desktopfiles"
 OBMENU="obmenu-generator"
 PKGMAKE="makepkg -s"
 #--------------------------------------------------#
-SWAPSTD="3>&1 1>&2 2>&3"
 RESOLUTION="1920x1080"
 TZFILE="/tmp/minAI_timezone.tmp"
 KEYMAPFILE="/tmp/minAI_keymap.tmp"
@@ -186,7 +185,7 @@ declare AUDID="none"
 AUDPACK="pulseaudio pulseaudio-alsa pulsemixer pavucontrol"
 
 LIGHTDM="lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings"
-declare DESKLIST="mate xfce cinnamon lxde lxqt deepin gnome kde bspwm openbox"
+declare DESKLIST="mate xfce cinnamon lxde lxqt deepin gnome kde bspwm bspwm_th openbox"
 declare DESKTYPE="mate"
 declare -A DESKDES
 DESKDES["mate"]="MATE Desktop Environment"
@@ -197,7 +196,8 @@ DESKDES["lxqt"]="Lightweight X11 Qt Desktop Environment"
 DESKDES["deepin"]="Deepin Desktop Environment"
 DESKDES["gnome"]="GNome Desktop Environment"
 DESKDES["kde"]="KDE Plasma Desktop Environment"
-DESKDES["bspwm"]="Tiling Window Manager"
+DESKDES["bspwm"]="Tiling Window Manager ( BSPWM )"
+DESKDES["bspwm_th"]="BSPWM and Polybar-Themes"
 DESKDES["openbox"]="Highly configurable and lightweight X11 window manager"
 declare -A DESKPAK
 DESKPAK["mate"]="$LIGHTDM mate mate-extra"
@@ -209,14 +209,17 @@ DESKPAK["deepin"]="$LIGHTDM deepin deepin-kwin"
 DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
 DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
 DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitrogen thunar"
+DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-pywal ttf-iosevka-nerd ttf-fantasque-nerd ttf-fantasque-sans-mono ttf-droid"
 DESKPAK["openbox"]="$LIGHTDM openbox obconf lxappearance-obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
 
 declare NUMDEV=0
 declare -a DSKDEV
 declare -a DSKSIZ
 
-BACKTITLE="minArchinstall version 1.0.1 :  Bash Shell Script for installing Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
+BACKTITLE="minArchinstall version 1.0.2 :  Bash Shell Script for installing Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
 STDDIALOG="whiptail --backtitle \"$BACKTITLE\""
+SWAPSTD="3>&1 1>&2 2>&3"
+
 
 MainMenu() {
 	local mch
@@ -741,8 +744,49 @@ icon_caps=false
 dirs=$bGDIR; "
 	local lIGHTBG="sed -i '/#background=/c\\background=/usr/share/backgrounds/archlinux/geowaves.png' /etc/lightdm/lightdm-gtk-greeter.conf"
 
+	local bSPWMSCRT="mkdir -p $uSRCFG/{bspwm,sxhkd,polybar,picom,nitrogen}
+cp /usr/share/doc/bspwm/examples/bspwmrc $uSRCFG/bspwm
+cp /usr/share/doc/bspwm/examples/sxhkdrc $uSRCFG/sxhkd
+cp /etc/xdg/picom.conf $uSRCFG/picom
+cp /etc/polybar/config.ini $uSRCFG/polybar
+chmod +x $uSRCFG/bwpwmrc
+echo 'pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf &
+nitrogen --restore &
+pgrep -x polybar > /dev/null || polybar &' >> $uSRCFG/bspwm/bspwmrc
+sed -i 's/urxvt/mate-terminal --hide-menubar/g' $uSRCFG/sxhkd/sxhkdrc
+echo 'super + e
+	thunar' >> $uSRCFG/sxhkd/sxhkdrc
+echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
+echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
+chown -R $SUPERUSR:users $uSRCFG
+$lIGHTBG
+systemctl enable lightdm"
+
+	local plusTHEMES="\n# Polybar-Themes
+pacman --noconfirm -S rofi calc ttf-iosevka-nerd ttf-fantasque-nerd ttf-fantasque-sans-mono ttf-droid mpd git
+pushd \$PWD
+cd /opt
+$GITCLONE/networkmanager-dmenu-git.git
+git clone https://github.com/adi1090x/polybar-themes.git
+popd
+chown -R $SUPERUSR:users /opt/{networkmanager-dmenu-git,polybar-themes}
+su -c 'cd /opt/networkmanager-dmenu-git ; $PKGMAKE' - $SUPERUSR
+pacman --noconfirm -U /opt/networkmanager-dmenu-git/*.tar.zst
+mv $uSRCFG/polybar $uSRCFG/polybar.0
+mkdir -p /usr/local/share/fonts $uSRCFG/polybar
+cp -fr /opt/polybar-themes/fonts/* /usr/local/share/fonts
+cp -rf /opt/polybar-themes/simple/* $uSRCFG/polybar
+cp -rf /opt/polybar-themes/bitmap/hack/* $uSRCFG/polybar/hack
+cp -rf /opt/polybar-themes/bitmap/shapes/* $uSRCFG/polybar/shapes
+chown -R $SUPERUSR:users $uSRCFG/polybar
+sed -i '/pgrep -x polybar/c\\~/.config/polybar/launch.sh --forest' $uSRCFG/bspwm/bspwmrc
+systemctl enable mpd"
+
 	echo -e "\npacman --noconfirm -S xorg network-manager-applet archlinux-wallpaper">> $CHROOTFILE
 	echo "[ \$? -ne 0 ] && PauseError 'Install [xorg...] incomplete'" >> $CHROOTFILE
+	if [ "$DESKTYPE" == "bspwm_th" ] ; then
+		echo "pacman --noconfirm -S ${DESKPAK['bspwm']}" >> $CHROOTFILE
+	fi
 	echo "pacman --noconfirm -S ${DESKPAK[$DESKTYPE]}" >> $CHROOTFILE
 	echo "[ \$? -ne 0 ] && PauseError 'Install [$DESKTYPE...] incomplete'" >> $CHROOTFILE
 	case $DESKTYPE in
@@ -781,25 +825,12 @@ dirs=$bGDIR; "
 			echo "systemctl enable sddm" >> $CHROOTFILE
 			;;		# kde
 		"bspwm" )
-			local bSPWMSCRT="mkdir -p $uSRCFG/{bspwm,sxhkd,polybar,picom,nitrogen}
-cp /usr/share/doc/bspwm/examples/bspwmrc $uSRCFG/bspwm
-cp /usr/share/doc/bspwm/examples/sxhkdrc $uSRCFG/sxhkd
-cp /etc/xdg/picom.conf $uSRCFG/picom
-cp /etc/polybar/config.ini $uSRCFG/polybar
-chmod +x $uSRCFG/bwpwmrc
-echo 'pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf &
-nitrogen --restore &
-pgrep -x polybar > /dev/null || polybar &' >> $uSRCFG/bspwm/bspwmrc
-sed -i 's/urxvt/mate-terminal --hide-menubar/g' $uSRCFG/sxhkd/sxhkdrc
-echo 'super + e
-	thunar' >> $uSRCFG/sxhkd/sxhkdrc
-echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
-echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
-chown -R $SUPERUSR:users $uSRCFG
-$lIGHTBG
-systemctl enable lightdm"
 			echo "$bSPWMSCRT" >> $CHROOTFILE
 			;;		# bspwm
+		"bspwm_th" )
+			echo "$bSPWMSCRT" >> $CHROOTFILE
+			echo -e "$plusTHEMES" >> $CHROOTFILE
+			;;		# bspwm and polybar-themes
 		"cinnamon" )
 			echo "$lIGHTBG" >> $CHROOTFILE
 			echo "systemctl enable lightdm" >> $CHROOTFILE
@@ -826,7 +857,7 @@ launcher_item_app = obconf.desktop"
 			local oPENSCRT="mkdir -p $uSRCFG/{tint2,openbox,$OBMENU,picom,nitrogen}
 cp -R /etc/xdg/{tint2,openbox} $uSRCFG
 echo \"$oPENAUTO\" >> $uSRCFG/openbox/autostart
-pushd $PWD
+pushd \$PWD
 cd /opt
 $GITCLONE/$PERLLINUX.git
 $GITCLONE/$OBMENU.git
@@ -1014,7 +1045,7 @@ ArchCLI() {
 	local rs=0
 	cmd="$STDDIALOG
 		--title 'Arch Linux Installation'
-		--yesno 'Warning...!\nAll data in /dev/$DEVDISK will be erased, then install...' 7 40 ${SWAPSTD}"
+		--yesno 'Warning...!\nAll data in /dev/$DEVDISK will be erased, then install...' 8 45 ${SWAPSTD}"
 	mch=`eval $cmd`
 	rs=$?
 	if [ $rs -eq 0 ]; then
