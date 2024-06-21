@@ -778,6 +778,7 @@ mkdir -p /usr/local/share/fonts $uSRCFG/polybar
 cp -fr /opt/polybar-themes/fonts/* /usr/local/share/fonts
 cp -rf /opt/polybar-themes/simple/* $uSRCFG/polybar
 cp -rf /opt/polybar-themes/bitmap/hack/* $uSRCFG/polybar/hack
+cp -rf /opt/polybar-themes/bitmap/shades/* $uSRCFG/polybar/shades
 cp -rf /opt/polybar-themes/bitmap/shapes/* $uSRCFG/polybar/shapes
 chown -R $SUPERUSR:users $uSRCFG/polybar
 sed -i '/pgrep -x polybar/c\\~/.config/polybar/launch.sh --forest' $uSRCFG/bspwm/bspwmrc
