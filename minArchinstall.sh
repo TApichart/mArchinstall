@@ -213,7 +213,7 @@ DESKPAK["deepin"]="$LIGHTDM deepin deepin-kwin"
 DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
 DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
 DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitrogen thunar"
-DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-pywal"
+DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-pywal git mpd"
 DESKPAK["openbox"]="$LIGHTDM openbox obconf lxappearance-obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
 
 declare NUMDEV=0
@@ -753,7 +753,7 @@ cp /usr/share/doc/bspwm/examples/bspwmrc $uSRCFG/bspwm
 cp /usr/share/doc/bspwm/examples/sxhkdrc $uSRCFG/sxhkd
 cp /etc/xdg/picom.conf $uSRCFG/picom
 cp /etc/polybar/config.ini $uSRCFG/polybar
-chmod +x $uSRCFG/bwpwmrc
+chmod +x $uSRCFG/bspwmrc
 echo 'pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf &
 nitrogen --restore &
 pgrep -x polybar > /dev/null || polybar &' >> $uSRCFG/bspwm/bspwmrc
