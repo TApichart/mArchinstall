@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================================== #
-# |                   minArchinstall.sh   Version 1.0.2                                           |
+# |                   minArchinstall.sh   Version 1.1.0                                           |
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
@@ -86,7 +86,7 @@ SWAPID=0
 declare -a SWAPDES=( "no swap" "swapfile" "swap partition" )
 
 declare CLILIST="htop zip unzip"
-OPTIONS="htop git zip unzip sysstat perf nano os-prober mtools dosfstools wget curl ntfs-3g neofetch amd-ucode intel-ucode"
+OPTIONS="htop git zip unzip sysstat perf nano os-prober mtools dosfstools wget curl ntfs-3g neofetch amd-ucode intel-ucode iptables"
 declare -A OPDESC
 OPDESC["htop"]="Interactive process viewer"
 OPDESC["git"]="The fast distributed version control system"
@@ -104,6 +104,7 @@ OPDESC["ntfs-3g"]="NTFS filesystem driver and utilities"
 OPDESC["neofetch"]="CLI system information tool"
 OPDESC["amd-ucode"]="Microcode for AMD processor"
 OPDESC["intel-ucode"]="Microcode for Intel processor"
+OPDESC["iptables"]="Network Packet Filtering (Using legacy interface)"
 declare -A OPCHCK
 OPCHCK["htop"]="on"
 OPCHCK["git"]="off"
@@ -121,6 +122,7 @@ OPCHCK["ntgs-3g"]="off"
 OPCHCK["neofetch"]="off"
 OPCHCK["amd-ucode"]="off"
 OPCHCK["intel-ucode"]="off"
+OPCHCK["iptables"]="on"
 
 declare SERVLIST=""
 OPTSERV="openssh apache mysql postgresql"
@@ -211,14 +213,14 @@ DESKPAK["deepin"]="$LIGHTDM deepin deepin-kwin"
 DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
 DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
 DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitrogen thunar"
-DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-pywal ttf-iosevka-nerd ttf-fantasque-nerd ttf-fantasque-sans-mono ttf-droid"
+DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-pywal"
 DESKPAK["openbox"]="$LIGHTDM openbox obconf lxappearance-obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
 
 declare NUMDEV=0
 declare -a DSKDEV
 declare -a DSKSIZ
 
-BACKTITLE="minArchinstall version 1.0.2 :  Bash Shell Script for installing Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
+BACKTITLE="minArchinstall version 1.1.0 :  Bash Shell Script for installing Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
 STDDIALOG="whiptail --backtitle \"$BACKTITLE\""
 SWAPSTD="3>&1 1>&2 2>&3"
 
@@ -476,7 +478,7 @@ OptionalCLI(){
 	local num=`echo "$OPTIONS" | wc -w`
 	local cmd="$STDDIALOG
 			--title 'Optional Command Line Packages'
-			--checklist 'These packages are the basics, has already included after installation:\n[ $PACKBASE1 ]\nChoose additional packages to install:' 22 80 $num"
+			--checklist 'These packages are the basics, has already included after installation:\n[ $PACKBASE1 ]\nChoose additional packages to install:' 24 80 $num"
 	for ep in $OPTIONS ; do
 		local pn=${OPDESC["$ep"]}
 		local pc=${OPCHCK["$ep"]}
@@ -754,8 +756,8 @@ cp /etc/polybar/config.ini $uSRCFG/polybar
 chmod +x $uSRCFG/bwpwmrc
 echo 'pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf &
 nitrogen --restore &
-sed -i 's/bspc rule/#bspc rule/g' $uSRCFG/bspwm/bspwmrc
 pgrep -x polybar > /dev/null || polybar &' >> $uSRCFG/bspwm/bspwmrc
+sed -i 's/bspc rule/#bspc rule/g' $uSRCFG/bspwm/bspwmrc
 sed -i 's/urxvt/mate-terminal --hide-menubar/g' $uSRCFG/sxhkd/sxhkdrc
 echo 'super + e
 	thunar' >> $uSRCFG/sxhkd/sxhkdrc
@@ -766,7 +768,6 @@ $lIGHTBG
 systemctl enable lightdm"
 
 	local plusTHEMES="\n# Polybar-Themes
-pacman --noconfirm -S rofi calc ttf-iosevka-nerd ttf-fantasque-nerd ttf-fantasque-sans-mono ttf-droid mpd git
 pushd \$PWD
 cd /opt
 $GITCLONE/networkmanager-dmenu-git.git
@@ -942,7 +943,7 @@ chown ${SUPERUSR}:users /home/${SUPERUSR}/.vimrc
 chmod 600 /home/${SUPERUSR}/.vimrc"
 
 	echo -e "$rOOTSCRIPT1" > $CHROOTFILE
-	[ ${SRVCHK["openssh"]} == "on" ] && echo "systemctl enable sshd" > $CHROOTFILE
+	[ ${SRVCHK["openssh"]} == "on" ] && echo "systemctl enable sshd" >> $CHROOTFILE
 	if [ "${OPCHCK["neofetch"]}" == "on" ] ; then
 		echo "echo 'neofetch' >> /home/${SUPERUSR}/.bash_profile" >> $CHROOTFILE
 	else
@@ -958,6 +959,32 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 	echo "$rOOTSCRIPT2" >> $CHROOTFILE
 	[ $ROOTABLE == "disable" ] && echo "usermod -s /usr/bin/nologin root" >> $CHROOTFILE
+	if [ "${OPCHCK['iptables']}" == "on" ] ; then
+		local aCCEPTsshd=""
+		[ "${SRVCHK['openssh']}" == 'on' ] && aCCEPTsshd="-A TCP -p tcp --port 22 -j ACCEPT"
+		echo "echo \"# Empty iptables rule file
+*filter
+:INPUT DROP [0:0]
+:FORWARD DROP [0:0]
+:OUTPUT ACCEPT [0:0]
+:TCP - [0:0]
+:UDP - [0:0]
+-A INPUT -m conntrack --ctstate NEW -j UDP
+-A INPUT -p icmp -m icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
+-A INPUT -p udp -m conntrack --ctstate NEW -j UDP
+-A INPUT -p tcp --tcp-flags FIN,SYN,RST,ACT SYN -m conntrack --ctstate NEW -j TCP
+-A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
+-A INPUT -p tcp -j REJECT --reject-with tcp-reset
+-A INPUT -j REJECT --reject-with icmp-proto-unreachable
+# === If you need more services to listening on network, Add the lines below:- ===
+#-A TCP -p tcp --port 22 -j ACCEPT
+#-A INPUT -p tcp -m tcp --syn -m conntrack --ctstate NEW --dport 22 -j ACCEPT
+#-A TCP -p tcp --dport 443 -j ACCEPT
+# ================================================================================
+${aCCEPTsshd}
+\" > /etc/iptables/iptables.rule
+systemctl enable iptables" >> $CHROOTFILE
+	fi
 }
 #=================== GenRootScript() ===================#
 
@@ -1038,6 +1065,7 @@ ConfirmInstall() {
 		$INITFILE
 		[ $? -eq 0 ] && MsgBox "Arch Linux Installation" "Install Arch Linux Completely......." && RS=1    # RS=1 is EXIT from Main menu
 	fi
+
 	[ -f $CHROOTFILE ] && rm $CHROOTFILE
 	[ -f $INITFILE ] && rm $INITFILE
 }
