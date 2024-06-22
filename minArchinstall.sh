@@ -213,7 +213,7 @@ DESKPAK["deepin"]="$LIGHTDM deepin deepin-kwin"
 DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
 DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
 DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitrogen thunar"
-DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-pywal git mpd"
+DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-pywal git mpd mpc"
 DESKPAK["openbox"]="$LIGHTDM openbox obconf lxappearance-obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
 
 declare NUMDEV=0
@@ -756,7 +756,10 @@ cp /etc/polybar/config.ini $uSRCFG/polybar
 chmod +x $uSRCFG/bspwmrc
 echo 'pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf &
 nitrogen --restore &
+
+# ========== Polybar or Polybar-Themes ========== #
 pgrep -x polybar > /dev/null || polybar &' >> $uSRCFG/bspwm/bspwmrc
+
 sed -i 's/bspc rule/#bspc rule/g' $uSRCFG/bspwm/bspwmrc
 sed -i 's/urxvt/mate-terminal --hide-menubar/g' $uSRCFG/sxhkd/sxhkdrc
 echo 'super + e
@@ -766,6 +769,29 @@ echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
 chown -R $SUPERUSR:users $uSRCFG
 $lIGHTBG
 systemctl enable lightdm"
+
+	local mpdCFG="# See: /usr/share/doc/mpd/mpdconf.example\n
+pid_file \\\"~/.config/mpd/pid\\\"
+db_file \\\"~/.config/mpd/mpd.db\\\"
+state_file \\\"~/.config/mpd/state\\\"
+playlist_directory \\\"~/.config/mpd/playlists\\\"
+music_directory \\\"~/Music\\\"
+auto_update \\\"yes\\\"
+
+audio_output {
+	type	\\\"pulse\\\"
+	name	\\\"pulse audio\\\"
+}
+
+audio_output {
+	type	\\\"fifo\\\"
+	name	\\\"my_fifo\\\"
+	path	\\\"/tmp/mpd.fifo\\\"
+	format	\\\"44100:16:2\\\"
+}
+
+bind_to_address  \\\"127.0.0.1\\\"
+port \\\"6600\\\""
 
 	local plusTHEMES="\n# Polybar-Themes
 pushd \$PWD
@@ -777,43 +803,50 @@ chown -R $SUPERUSR:users /opt/{networkmanager-dmenu-git,polybar-themes}
 su -c 'cd /opt/networkmanager-dmenu-git ; $PKGMAKE' - $SUPERUSR
 pacman --noconfirm -U /opt/networkmanager-dmenu-git/*.tar.zst
 mv $uSRCFG/polybar $uSRCFG/polybar.0
-mkdir -p /usr/local/share/fonts $uSRCFG/polybar
+mkdir -p /usr/local/share/fonts $uSRCFG/{polybar,mpd/playlists}
 cp -fr /opt/polybar-themes/fonts/* /usr/local/share/fonts
 cp -rf /opt/polybar-themes/simple/* $uSRCFG/polybar
 cp -rf /opt/polybar-themes/bitmap/hack/* $uSRCFG/polybar/hack
 cp -rf /opt/polybar-themes/bitmap/shades/* $uSRCFG/polybar/shades
 cp -rf /opt/polybar-themes/bitmap/shapes/* $uSRCFG/polybar/shapes
-chown -R $SUPERUSR:users $uSRCFG/polybar
+chown -R $SUPERUSR:users $uSRCFG/{polybar,mpd}
 sed -i '/pgrep -x polybar/c\\~/.config/polybar/launch.sh --forest' $uSRCFG/bspwm/bspwmrc
-systemctl enable mpd"
+# ==== Insert Media player to BSPWM cofig ==== #
+echo \"# ======== Media Player ========
+[ ! -s ~/.config/mpd/pid ] && mpd
+mpc clear ; mpc add /
+\" >> $uSRCFG/bspwm/bspwmrc"
 
-	echo -e "\npacman --noconfirm -S xorg network-manager-applet archlinux-wallpaper">> $CHROOTFILE
+	# =============== Static install packages :- xorg, network-manater-applet archlinux-wallpaper ============== #
+	echo -e "\npacman --noconfirm -S xorg network-manager-applet archlinux-wallpaper" >> $CHROOTFILE
+
 	echo "[ \$? -ne 0 ] && PauseError 'Install [xorg...] incomplete'" >> $CHROOTFILE
 	if [ "$DESKTYPE" == "bspwm_th" ] ; then
 		echo "pacman --noconfirm -S ${DESKPAK['bspwm']}" >> $CHROOTFILE
 	fi
 	echo "pacman --noconfirm -S ${DESKPAK[$DESKTYPE]}" >> $CHROOTFILE
 	echo "[ \$? -ne 0 ] && PauseError 'Install [$DESKTYPE...] incomplete'" >> $CHROOTFILE
+
 	case $DESKTYPE in
 		"mate" )
 			echo "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
 			echo "$lIGHTBG" >> $CHROOTFILE
 			echo "systemctl enable lightdm" >> $CHROOTFILE
-			;;		# mate
+			;;		# Mate Desktop
 		"xfce" )
 			echo "sed -i '/# session=/c\\session=startxfce4' /etc/lxdm/lxdm.conf" >> $CHROOTFILE
 			echo "systemctl enable lxdm" >> $CHROOTFILE
-			;;		# xfce4
+			;;		# XFCE4 Desktop
 		"deepin" )
 			echo "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf" >> $CHROOTFILE
 			echo "$lIGHTBG" >> $CHROOTFILE
 			echo "systemctl enable lightdm" >> $CHROOTFILE
 			echo "pacman --noconfirm -S deepin-{terminal,calculator,clipboard,community-wallpapers}" >> $CHROOTFILE
 			echo "[ \$? -ne 0 ] && PauseError 'Install [deepin] incomplete.'" >> $CHROOTFILE
-			;;
+			;;		# Deepin Desktop
 		"lxde" )
 			echo "systemctl enable lxdm" >> $CHROOTFILE
-			;;		# lxde
+			;;		# LXDE Desktop
 		"lxqt" )
 			echo "sed -i '/#greeter-session=/c\\greeter-session=lightdm-webkit2-greeter' /etc/lightdm/lightdm.confn" >> $CHROOTFILE
 			echo "$lIGHTBG" >> $CHROOTFILE
@@ -821,25 +854,27 @@ systemctl enable mpd"
 			echo "sed -i 's/icon_theme=oxygen/icon_theme=Adwaita/g' /usr/share/lxqt/lxqt.conf" >> $CHROOTFILE
 			echo "sed -i '/icon_theme=/c\\icon_theme=breeze-dark' $uSRCFG/lxqt/lxqt.conf" >> $CHROOTFILE
 			echo "systemctl enable lightdm" >> $CHROOTFILE
-			;;		# lxqt
+			;;		# LXqt Desktop
 		"gnome" )
 			echo "sed -i 's/#Wayland/Wayland/g' /etc/gdm/custom.conf" >> $CHROOTFILE
 			echo "systemctl enable gdm" >> $CHROOTFILE
-			;;		# gnome
+			;;		# GNOME Desktop
 		"kde" )
 			echo "systemctl enable sddm" >> $CHROOTFILE
-			;;		# kde
+			;;		# KDE Desktop
 		"bspwm" )
 			echo "$bSPWMSCRT" >> $CHROOTFILE
-			;;		# bspwm
+			;;		# BSPWM Window Manager
 		"bspwm_th" )
 			echo "$bSPWMSCRT" >> $CHROOTFILE
 			echo -e "$plusTHEMES" >> $CHROOTFILE
-			;;		# bspwm and polybar-themes
+			echo "echo -e \"${mpdCFG}\" > $uSRCFG/mpd/mpd.conf" >> $CHROOTFILE
+			echo "chown $SUPERUSR:users $uSRCFG/mpd/mpd.conf" >> $CHROOTFILE
+			;;		# BSPWM Window Manager and Polybar-Themes
 		"cinnamon" )
 			echo "$lIGHTBG" >> $CHROOTFILE
 			echo "systemctl enable lightdm" >> $CHROOTFILE
-			;;		# cinnamon
+			;;		# Cinnamon Desktop
 		"openbox" )
 			local aPPEND1="    {beg => ['Shutdown-Menu', 'open-menu-symbolic']}, \\n\\
 		{item => ['poweroff -i', 'Shutdown', 'system-shutdown-symbolic']}, \\n\\
@@ -885,9 +920,10 @@ chown -R $SUPERUSR:users $uSRCFG
 $lIGHTBG
 systemctl enable lightdm"
 			echo "$oPENSCRT" >> $CHROOTFILE
-			;;		# openbox
+			;;		# OpenBox Window Manager
 	esac
 
+	# ========= The tail scipts :- for Installl of Desktop / Window Manager ============== #
 	[ "$RESOLUTION" != 'not define' ] && echo "echo \"$mONITOR1\" > /etc/X11/xorg.conf.d/01-monitor.conf" >> $CHROOTFILE
 	echo "pacman --noconfirm -S ${VDOPACK[$VDOID]}" >> $CHROOTFILE
 	echo "[ \$? -ne 0 ] && PauseError 'Install [${VDOPACK[$VDOID]}] incomplete.'" >> $CHROOTFILE
