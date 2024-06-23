@@ -1018,7 +1018,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 #-A TCP -p tcp --dport 443 -j ACCEPT
 # ================================================================================
 ${aCCEPTsshd}
-\" > /etc/iptables/iptables.rule
+\" > /etc/iptables/iptables.rules
 systemctl enable iptables" >> $CHROOTFILE
 	fi
 }
