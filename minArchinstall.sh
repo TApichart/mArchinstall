@@ -1005,7 +1005,9 @@ grub-mkconfig -o /boot/grub/grub.cfg
 :OUTPUT ACCEPT [0:0]
 :TCP - [0:0]
 :UDP - [0:0]
--A INPUT -m conntrack --ctstate NEW -j UDP
+-A INPUT -m conntrack --ctstate RELATE,ESTABLISHED -j ACCEPT
+-A INPUT -i lo -i ACCEPT
+-A INPUT -m conntrack --ctstate INVALID -j DROP
 -A INPUT -p icmp -m icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
 -A INPUT -p udp -m conntrack --ctstate NEW -j UDP
 -A INPUT -p tcp --tcp-flags FIN,SYN,RST,ACT SYN -m conntrack --ctstate NEW -j TCP
