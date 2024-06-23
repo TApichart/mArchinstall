@@ -1010,7 +1010,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 -A INPUT -m conntrack --ctstate INVALID -j DROP
 -A INPUT -p icmp -m icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
 -A INPUT -p udp -m conntrack --ctstate NEW -j UDP
--A INPUT -p tcp --tcp-flags FIN,SYN,RST,ACT SYN -m conntrack --ctstate NEW -j TCP
+-A INPUT -p tcp --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j TCP
 -A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
 -A INPUT -p tcp -j REJECT --reject-with tcp-reset
 -A INPUT -j REJECT --reject-with icmp-proto-unreachable
@@ -1020,6 +1020,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 #-A TCP -p tcp --dport 443 -j ACCEPT
 # ================================================================================
 ${aCCEPTsshd}
+COMMIT
 \" > /etc/iptables/iptables.rules
 systemctl enable iptables" >> $CHROOTFILE
 	fi
