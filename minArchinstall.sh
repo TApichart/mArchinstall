@@ -1002,7 +1002,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 	[ $ROOTABLE == "disable" ] && echo "usermod -s /usr/bin/nologin root" >> $CHROOTFILE
 	if [ "${OPCHCK['iptables']}" == "on" ] ; then
 		local aCCEPTsshd=""
-		[ "${SRVCHK['openssh']}" == 'on' ] && aCCEPTsshd="-A TCP -p tcp --port 22 -j ACCEPT"
+		[ "${SRVCHK['openssh']}" == 'on' ] && aCCEPTsshd="-A TCP -p tcp --dport 22 -j ACCEPT"
 		echo "echo \"# Empty iptables rule file
 *filter
 :INPUT DROP [0:0]
@@ -1020,7 +1020,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 -A INPUT -p tcp -j REJECT --reject-with tcp-reset
 -A INPUT -j REJECT --reject-with icmp-proto-unreachable
 # === If you need more services to listening on network, Add the lines below:- ===
-#-A TCP -p tcp --port 22 -j ACCEPT
+#-A TCP -p tcp --dport 22 -j ACCEPT
 #-A INPUT -p tcp -m tcp --syn -m conntrack --ctstate NEW --dport 22 -j ACCEPT
 #-A TCP -p tcp --dport 443 -j ACCEPT
 # ================================================================================
