@@ -189,7 +189,7 @@ declare AUDID="none"
 AUDPACK="pulseaudio pulseaudio-alsa pulsemixer pavucontrol"
 
 LIGHTDM="lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings"
-declare DESKLIST="mate xfce cinnamon lxde lxqt deepin gnome kde bspwm bspwm_th openbox"
+declare DESKLIST="mate xfce cinnamon lxde lxqt deepin gnome kde bspwm bspwm_th openbox i3wm"
 declare DESKTYPE="mate"
 declare -A DESKDES
 DESKDES["mate"]="MATE Desktop Environment"
@@ -203,6 +203,7 @@ DESKDES["kde"]="KDE Plasma Desktop Environment"
 DESKDES["bspwm"]="Tiling Window Manager ( BSPWM )"
 DESKDES["bspwm_th"]="BSPWM and Polybar-Themes"
 DESKDES["openbox"]="Highly configurable and lightweight X11 window manager"
+DESKDES["i3wm"]="Dynamic tiling window manager"
 declare -A DESKPAK
 DESKPAK["mate"]="$LIGHTDM mate mate-extra"
 DESKPAK["xfce"]="lxdm xfce4 xfce4-goodies"
@@ -215,6 +216,7 @@ DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
 DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitrogen thunar"
 DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-pywal git mpd mpc"
 DESKPAK["openbox"]="$LIGHTDM openbox obconf lxappearance-obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
+DESKPAK["i3wm"]="sddm i3 dmenu terminator"
 
 declare NUMDEV=0
 declare -a DSKDEV
@@ -921,6 +923,9 @@ $lIGHTBG
 systemctl enable lightdm"
 			echo "$oPENSCRT" >> $CHROOTFILE
 			;;		# OpenBox Window Manager
+		"i3wm" )
+			echo "systemctl enable sddm" >> $CHROOTFILE
+			;;		# i3-wm Window Manager
 	esac
 
 	# ========= The tail scipts :- for Installl of Desktop / Window Manager ============== #
@@ -1006,8 +1011,8 @@ grub-mkconfig -o /boot/grub/grub.cfg
 :TCP - [0:0]
 :UDP - [0:0]
 -A INPUT -m conntrack --ctstate RELATE,ESTABLISHED -j ACCEPT
--A INPUT -i lo -i ACCEPT
--A INPUT -m conntrack --ctstate INVALID -j DROP
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m conntrack --ctstate NEW -j UDP
 -A INPUT -p icmp -m icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
 -A INPUT -p udp -m conntrack --ctstate NEW -j UDP
 -A INPUT -p tcp --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j TCP
@@ -1191,7 +1196,7 @@ ArchDesktop() {
 	local rs=0
 	local initch='mate'
 	cmd="$STDDIALOG --nocancel
-		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 19 80 11"
+		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 20 80 12"
 	for ep in $DESKLIST ; do
 		cmd+=" '$ep' '${DESKDES[$ep]}'"
 	done
