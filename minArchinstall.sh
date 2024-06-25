@@ -216,7 +216,7 @@ DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
 DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitrogen thunar"
 DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-pywal git mpd mpc"
 DESKPAK["openbox"]="$LIGHTDM openbox obconf lxappearance-obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
-DESKPAK["i3wm"]="sddm i3 dmenu terminator"
+DESKPAK["i3wm"]="sddm i3 dmenu polybar picom terminator feh alacritty thunar xfce4-settings rofi calc python-pywal git mpd mpc"
 
 declare NUMDEV=0
 declare -a DSKDEV
@@ -768,7 +768,6 @@ echo 'super + e
 	thunar' >> $uSRCFG/sxhkd/sxhkdrc
 echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
 echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
-chown -R $SUPERUSR:users $uSRCFG
 $lIGHTBG
 systemctl enable lightdm"
 
@@ -805,19 +804,13 @@ chown -R $SUPERUSR:users /opt/{networkmanager-dmenu-git,polybar-themes}
 su -c 'cd /opt/networkmanager-dmenu-git ; $PKGMAKE' - $SUPERUSR
 pacman --noconfirm -U /opt/networkmanager-dmenu-git/*.tar.zst
 mv $uSRCFG/polybar $uSRCFG/polybar.0
-mkdir -p /usr/local/share/fonts $uSRCFG/{polybar,mpd/playlists}
+mkdir -p /usr/local/share/{fonts,backgrounds} $uSRCFG/{polybar,mpd/playlists}
 cp -fr /opt/polybar-themes/fonts/* /usr/local/share/fonts
+cp -fr /opt/polybar-themes/wallpapers/* /usr/local/share/backgrounds
 cp -rf /opt/polybar-themes/simple/* $uSRCFG/polybar
 cp -rf /opt/polybar-themes/bitmap/hack/* $uSRCFG/polybar/hack
 cp -rf /opt/polybar-themes/bitmap/shades/* $uSRCFG/polybar/shades
-cp -rf /opt/polybar-themes/bitmap/shapes/* $uSRCFG/polybar/shapes
-chown -R $SUPERUSR:users $uSRCFG/{polybar,mpd}
-sed -i '/pgrep -x polybar/c\\~/.config/polybar/launch.sh --forest' $uSRCFG/bspwm/bspwmrc
-# ==== Insert Media player to BSPWM cofig ==== #
-echo \"# ======== Media Player ========
-[ ! -s ~/.config/mpd/pid ] && mpd
-mpc clear ; mpc add /
-\" >> $uSRCFG/bspwm/bspwmrc"
+cp -rf /opt/polybar-themes/bitmap/shapes/* $uSRCFG/polybar/shapes"
 
 	# =============== Static install packages :- xorg, network-manater-applet archlinux-wallpaper ============== #
 	echo -e "\npacman --noconfirm -S xorg network-manager-applet archlinux-wallpaper" >> $CHROOTFILE
@@ -866,12 +859,20 @@ mpc clear ; mpc add /
 			;;		# KDE Desktop
 		"bspwm" )
 			echo "$bSPWMSCRT" >> $CHROOTFILE
+			echo "chown -R $SUPERUSR:users $sUPERHOME" >> $CHROOTFILE
 			;;		# BSPWM Window Manager
 		"bspwm_th" )
 			echo "$bSPWMSCRT" >> $CHROOTFILE
+			echo "sed -i '/pgrep -x polybar/c\\~/.config/polybar/launch.sh --forest' $uSRCFG/bspwm/bspwmrc
+# ==== Insert Media player to BSPWM cofig ==== #
+echo \"# ======== Media Player ========
+[ ! -s ~/.config/mpd/pid ] && mpd
+mpc clear ; mpc add /
+\" >> $uSRCFG/bspwm/bspwmrc" >> $CHROOTFILE
 			echo -e "$plusTHEMES" >> $CHROOTFILE
 			echo "echo -e \"${mpdCFG}\" > $uSRCFG/mpd/mpd.conf" >> $CHROOTFILE
 			echo "chown $SUPERUSR:users $uSRCFG/mpd/mpd.conf" >> $CHROOTFILE
+			echo "chown -R $SUPERUSR:users $sUPERHOME" >> $CHROOTFILE
 			;;		# BSPWM Window Manager and Polybar-Themes
 		"cinnamon" )
 			echo "$lIGHTBG" >> $CHROOTFILE
@@ -918,13 +919,37 @@ cp /etc/xdg/$OBMENU/* $uSRCFG/$OBMENU
 echo \"$aPPEND2\" > $uSRCFG/openbox/menu.xml
 echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
 echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
-chown -R $SUPERUSR:users $uSRCFG
+chown -R $SUPERUSR:users $sUPERHOME
 $lIGHTBG
 systemctl enable lightdm"
 			echo "$oPENSCRT" >> $CHROOTFILE
 			;;		# OpenBox Window Manager
 		"i3wm" )
 			echo "systemctl enable sddm" >> $CHROOTFILE
+			echo -e "$plusTHEMES" >> $CHROOTFILE
+			echo "mkdir -p $uSRCFG/i3 ; cp /etc/i3/config $uSRCFG/i3
+cp /etc/xdg/picom.conf $uSRCFG/picom
+cp /etc/polybar/config.ini $uSRCFG/polybar
+cp /etc/i3blocks.conf $sUPERHOME/.i3blocks.conf
+cp /etc/i3status.conf $sUPERHOME/.i3status.conf
+chmod 600 $sUPERHOME/.i3*.conf
+sed -i 's/i3-sensible-terminal/alacritty/g' $uSRCFG/i3/config
+echo -e \"${mpdCFG}\" > $uSRCFG/mpd/mpd.conf
+sed -i '/font pango:monospace/c\\set \$mod Mod4\\nfont pango:monospace 8' $uSRCFG/i3/config
+sed -i 's/Mod1/\$mod/g' $uSRCFG/i3/config
+sed -i '/exec i3-config/c\\exec_always ~/autorun.sh' $uSRCFG/i3/config
+#### Create   autorun.sh #####
+echo '#!/usr/bin/bash
+
+picom --config $uSRCFG/picom/picom.conf &
+feh --bg-fill /usr/local/share/backgrounds/bg_3.jpg &
+$uSRCFG/polybar/launch.sh --blocks &
+
+[ ! -s ~/.config/mpd/pid ] && mpd
+mpc clear ; mpc add / ' > $sUPERHOME/autorun.sh
+#### ---- autorun.sh ---- #####
+chown -R $SUPERUSR:users $sUPERHOME
+chmod 700 $sUPERHOME/autorun.sh" >> $CHROOTFILE
 			;;		# i3-wm Window Manager
 	esac
 
