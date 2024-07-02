@@ -4,7 +4,7 @@
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
-# | Last Modified: May,23 2024                                                                    |
+# | Last Modified: June,25 2024                                                                    |
 # | License : CC0 -                                                                               |
 # |     CC0 (aka CC Zero) is a public dedication tool, which enables creators to give up          |
 # |     their copyright and put their works into the worldwide public domain. CC0                 |
@@ -189,7 +189,7 @@ declare AUDID="none"
 AUDPACK="pulseaudio pulseaudio-alsa pulsemixer pavucontrol"
 
 LIGHTDM="lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings"
-declare DESKLIST="mate xfce cinnamon lxde lxqt deepin gnome kde bspwm bspwm_th openbox i3wm"
+declare DESKLIST="mate xfce cinnamon lxde lxqt deepin gnome kde bspwm bspwm_th openbox i3wm awesome"
 declare DESKTYPE="mate"
 declare -A DESKDES
 DESKDES["mate"]="MATE Desktop Environment"
@@ -204,6 +204,7 @@ DESKDES["bspwm"]="Tiling Window Manager ( BSPWM )"
 DESKDES["bspwm_th"]="BSPWM and Polybar-Themes"
 DESKDES["openbox"]="Highly configurable and lightweight X11 window manager"
 DESKDES["i3wm"]="Dynamic tiling window manager"
+DESKDES["awesome"]="Awesome - Highly configurable framework window manager"
 declare -A DESKPAK
 DESKPAK["mate"]="$LIGHTDM mate mate-extra"
 DESKPAK["xfce"]="lxdm xfce4 xfce4-goodies"
@@ -214,9 +215,10 @@ DESKPAK["deepin"]="$LIGHTDM deepin deepin-kwin"
 DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
 DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
 DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitrogen thunar"
-DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-pywal git mpd mpc"
+DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-{pywal,gobject} git mpd mpc"
 DESKPAK["openbox"]="$LIGHTDM openbox obconf lxappearance-obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
-DESKPAK["i3wm"]="sddm i3 dmenu polybar picom terminator feh alacritty thunar xfce4-settings rofi calc python-pywal git mpd mpc"
+DESKPAK["i3wm"]="sddm i3 dmenu polybar picom terminator feh alacritty thunar xfce4-settings rofi calc python-{pywal,gobject} git mpd mpc"
+DESKPAK["awesome"]="sddm awesome nitrogen alacritty thunar git"
 
 declare NUMDEV=0
 declare -a DSKDEV
@@ -927,7 +929,7 @@ systemctl enable lightdm"
 		"i3wm" )
 			echo "systemctl enable sddm" >> $CHROOTFILE
 			echo -e "$plusTHEMES" >> $CHROOTFILE
-			echo "mkdir -p $uSRCFG/i3 ; cp /etc/i3/config $uSRCFG/i3
+			echo "mkdir -p $uSRCFG/{i3,picom} ; cp /etc/i3/config $uSRCFG/i3
 cp /etc/xdg/picom.conf $uSRCFG/picom
 cp /etc/polybar/config.ini $uSRCFG/polybar
 cp /etc/i3blocks.conf $sUPERHOME/.i3blocks.conf
@@ -951,6 +953,34 @@ mpc clear ; mpc add / ' > $sUPERHOME/autorun.sh
 chown -R $SUPERUSR:users $sUPERHOME
 chmod 700 $sUPERHOME/autorun.sh" >> $CHROOTFILE
 			;;		# i3-wm Window Manager
+		"awesome" )
+			echo "systemctl enable sddm" >> $CHROOTFILE
+			echo -e "mkdir -p $uSRCFG/{awesome,nitrogen} ; cp /etc/xdg/awesome/* $uSRCFG/awesome
+sed -i '/^terminal =/c\\\\terminal = \"alacritty\"' $uSRCFG/awesome/rc.lua
+sed -i 's/nano/vim/g' $uSRCFG/awesome/rc.lua
+sed -i '/local menubar =/c\\local menubar = require(\"menubar\")\\\\nlocal appmenu = require(\"appmenu\")' $uSRCFG/awesome/rc.lua
+sed -i 's/theme.lua\")/theme.lua\")\\\\nbeautiful.font=\"Monospace 12\"\\\\nbeautiful.menu_height=21\\\\nbeautiful.menu_width=280/g' $uSRCFG/awesome/rc.lua
+sed -i 's/\"quit\"/\"logout\"/g;s/\"restart\"/\"reload\"/g' $uSRCFG/awesome/rc.lua
+sed -i 's/terminal }/terminal },\\\\n		{ \"Applications\", appmenu.Appmenu }/g' $uSRCFG/awesome/rc.lua
+echo '\nawful.spawn.with_shell(\"~/.config/awesome/autorun.sh\")' >> $uSRCFG/awesome/rc.lua
+echo '#!/usr/bin/bash
+
+killall -9 awesome-appmenu
+nitrogen --restore &
+awesome-appmenu &' > $uSRCFG/awesome/autorun.sh
+pushd \$PWD
+cd /opt
+git clone https://github.com/montagdude/awesome-appmenu.git
+chown -R $SUPERUSR:users /opt/awesome-appmenu
+su -c 'cd /opt/awesome-appmenu ; $PKGMAKE' - $SUPERUSR
+pacman --noconfirm -U /opt/awesome-appmenu/*.tar.zst
+popd
+echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
+echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
+chown -R $SUPERUSR:users $sUPERHOME
+chmod 700 $uSRCFG/awesome/autorun.sh
+su -c 'awesome-appmenu' - $SUPERUSR" >> $CHROOTFILE
+			;;
 	esac
 
 	# ========= The tail scipts :- for Installl of Desktop / Window Manager ============== #
@@ -1221,7 +1251,7 @@ ArchDesktop() {
 	local rs=0
 	local initch='mate'
 	cmd="$STDDIALOG --nocancel
-		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 20 80 12"
+		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 21 80 13"
 	for ep in $DESKLIST ; do
 		cmd+=" '$ep' '${DESKDES[$ep]}'"
 	done
