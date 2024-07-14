@@ -4,7 +4,7 @@
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
-# | Last Modified: June,25 2024                                                                    |
+# | Last Modified: July,14 2024                                                                   |
 # | License : CC0 -                                                                               |
 # |     CC0 (aka CC Zero) is a public dedication tool, which enables creators to give up          |
 # |     their copyright and put their works into the worldwide public domain. CC0                 |
@@ -62,9 +62,11 @@ KEYMAPFILE="/tmp/minAI_keymap.tmp"
 LSDISKFILE="/tmp/minAI_disk.tmp"
 CHROOTFILE="/root/minAI_chroot.sh"
 INITFILE="/tmp/minAI_init.sh"
-TIMEZONE="Asia/Bangkok"
+THAIZONE="Asia/Bangkok"
+TIMEZONE="$THAIZONE"
 KEYMAP="us"
-MIRRORTH="auto"
+MIRRORSET="auto"
+CUSTOMSET="TH,AU,NL"
 HOSTNAME="arch"
 ROOTABLE="disable"
 ROOTPASS="rootArch24"
@@ -139,7 +141,7 @@ SRVCHK["postgresql"]="off"
 
 declare XPKLIST="vlc firefox libreoffice mousepad leafpad geany notepadqq gimp inkscape darktable freecad xdg-user-dirs gvfs"
 declare XPACKS="vlc firefox mousepad xdg-user-dirs"
-declare XFIXPK="noto-fonts"
+declare XFIXPK="noto-fonts gnu-free-fonts ttf-dejavu ttf-liberation ttf-droid ttf-font-awesome"
 declare -A XPKDES
 XPKDES["vlc"]="Media player"
 XPKDES["firefox"]="Firefox Web Browser"
@@ -189,7 +191,7 @@ declare AUDID="none"
 AUDPACK="pulseaudio pulseaudio-alsa pulsemixer pavucontrol"
 
 LIGHTDM="lightdm lightdm-gtk-greeter lightdm-gtk-greeter-settings"
-declare DESKLIST="mate xfce cinnamon lxde lxqt deepin gnome kde bspwm bspwm_th openbox i3wm awesome"
+declare DESKLIST="mate xfce cinnamon lxde lxqt deepin gnome kde bspwm bspwm_th openbox i3wm awesome qtile"
 declare DESKTYPE="mate"
 declare -A DESKDES
 DESKDES["mate"]="MATE Desktop Environment"
@@ -205,6 +207,7 @@ DESKDES["bspwm_th"]="BSPWM and Polybar-Themes"
 DESKDES["openbox"]="Highly configurable and lightweight X11 window manager"
 DESKDES["i3wm"]="Dynamic tiling window manager"
 DESKDES["awesome"]="Awesome - Highly configurable framework window manager"
+DESKDES["qtile"]="A full-featured, pure-Python tiling window manager"
 declare -A DESKPAK
 DESKPAK["mate"]="$LIGHTDM mate mate-extra"
 DESKPAK["xfce"]="lxdm xfce4 xfce4-goodies"
@@ -218,7 +221,8 @@ DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitroge
 DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-{pywal,gobject} git mpd mpc"
 DESKPAK["openbox"]="$LIGHTDM openbox obconf lxappearance-obconf tint2 xterm gmrun mate-terminal picom nitrogen pcmanfm thunar glib-perl perl-data-dump perl-gtk3 git geany"
 DESKPAK["i3wm"]="sddm i3 dmenu polybar picom terminator feh alacritty thunar xfce4-settings rofi calc python-{pywal,gobject} git mpd mpc"
-DESKPAK["awesome"]="sddm awesome nitrogen alacritty thunar git"
+DESKPAK["awesome"]="sddm awesome nitrogen alacritty xterm thunar git"
+DESKPAK["qtile"]="$LIGHTDM qtile lxappearance nitrogen thunar mate-terminal picom python-psutil git"
 
 declare NUMDEV=0
 declare -a DSKDEV
@@ -233,12 +237,14 @@ MainMenu() {
 	local mch
 	local cmd
 	local initdev="none"
+	local initmirr="auto"
 	[ "$DEVDISK" != "none" ] && initdev="/dev/$DEVDISK"
+	[ "$MIRRORSET" != "auto" ] && initmirr="$CUSTOMSET"
 	cmd="$STDDIALOG --cancel-button 'Quit'
 		--title 'Main Menu' --default-item \"${MAINCH}\" --menu 'Select menu:-' 18 62 10
         '0' 'Keyboard Map...............[$KEYMAP]'
 		'1' 'Timezone ..................[$TIMEZONE]'
-		'2' 'Server mirror list.........[$MIRRORTH]'
+		'2' 'Server mirror list.........[$initmirr]'
 		'3' 'Hostname ..................[$HOSTNAME]'
 		'4' 'User and password .........[$SUPERUSR]'
 		'5' 'Type of Linux Kernel ......[$KERNELTP]'
@@ -658,11 +664,11 @@ PartRootVarTmp() {
 	local -i nhome=ntmp+1
 	echo -e "$ROOTPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB"
-	echo -e "$HOMEPARTLABEL"
+	echo -e "$VARPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 20GiB 25GiB"
 	echo -e "$TMPPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 25GiB 30GiB"
-	echo -e "$VARPARTLABEL"
+	echo -e "$HOMEPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 30GiB 100%"
 	echo -e "$FORMATLABEL"
 	echo "mkfs.ext4 -F ${devdisk}${nroot}"
@@ -954,8 +960,8 @@ chown -R $SUPERUSR:users $sUPERHOME
 chmod 700 $sUPERHOME/autorun.sh" >> $CHROOTFILE
 			;;		# i3-wm Window Manager
 		"awesome" )
-			echo "systemctl enable sddm" >> $CHROOTFILE
-			echo -e "mkdir -p $uSRCFG/{awesome,nitrogen} ; cp /etc/xdg/awesome/* $uSRCFG/awesome
+			echo -e "systemctl enable sddm
+mkdir -p $uSRCFG/{awesome,nitrogen} ; cp /etc/xdg/awesome/* $uSRCFG/awesome
 sed -i '/^terminal =/c\\\\terminal = \"alacritty\"' $uSRCFG/awesome/rc.lua
 sed -i 's/nano/vim/g' $uSRCFG/awesome/rc.lua
 sed -i '/local menubar =/c\\local menubar = require(\"menubar\")\\\\nlocal appmenu = require(\"appmenu\")' $uSRCFG/awesome/rc.lua
@@ -978,9 +984,26 @@ popd
 echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
 echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
 chown -R $SUPERUSR:users $sUPERHOME
-chmod 700 $uSRCFG/awesome/autorun.sh
-su -c 'awesome-appmenu' - $SUPERUSR" >> $CHROOTFILE
-			;;
+chmod 700 $uSRCFG/awesome/autorun.sh" >> $CHROOTFILE
+			if [ "$TIMEZONE" == "$THAIZONE" ] ; then
+				echo "echo 'setxkbmap -option \"grp:alt_space_toggle\" -layout \"us,th\"' >> $uSRCFG/awesome/autorun.sh" >> $CHROOTFILE
+			fi
+			;;	# == awesome Window Manager ==
+		"qtile" )
+			echo "$lIGHTBG
+systemctl enable lightdm
+mkdir -p $uSRCFG/{nitrogen,picom} 
+cp /etc/xdg/picom.conf $uSRCFG/picom/
+echo 'killall -9 picom
+nitrogen --restore &
+picom --config $uSRCFG/picom/picom.conf &' > $sUPERHOME/.xprofile
+echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
+echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
+chown -R $SUPERUSR:users $sUPERHOME" >> $CHROOTFILE
+			if [ "$TIMEZONE" == "$THAIZONE" ] ; then
+				echo "echo 'setxkbmap -option \"grp:alt_space_toggle\" -layout \"us,th\"' >> $sUPERHOME/.xprofile" >> $CHROOTFILE
+			fi
+			;;	# == qtile Window Manager ==
 	esac
 
 	# ========= The tail scipts :- for Installl of Desktop / Window Manager ============== #
@@ -990,8 +1013,10 @@ su -c 'awesome-appmenu' - $SUPERUSR" >> $CHROOTFILE
 	if [ $AUDID != "none" ]; then
 		echo "pacman --noconfirm -S $AUDPACK" >> $CHROOTFILE
 	fi
-	echo "pacman --noconfirm -S noto-fonts $XPACKS" >> $CHROOTFILE
+	echo "pacman --noconfirm -S $XFIXPK $XPACKS" >> $CHROOTFILE
 	echo "[ \$? -ne 0 ] && PauseError 'Additional packages for GUI incomplete.'" >> $CHROOTFILE
+	# ========= Fix Awesome Menu ========= #
+	[ "$DESKTYPE" == "awesome" ] && echo "su -c 'awesome-appmenu' - $SUPERUSR" >> $CHROOTFILE
 }
 #=================== GenDesktopScript() ===================#
 
@@ -1189,7 +1214,6 @@ ArchCLI() {
 SetVGA() {
 	local mch
 	local cmd
-	local rs=0
 	cmd="$STDDIALOG
 		--title 'VGA Configuration' --default-item '$VDOID' --menu 'Video setting:-' 16 80 8"
 	for i in `seq 1 1 6` ; do
@@ -1197,22 +1221,19 @@ SetVGA() {
 	done
 	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	[ $rs -eq 0 ] && VDOID=$mch
+	[ $? -eq 0 ] && VDOID=$mch
 }
 
 
 SetAudio() {
 	local mch
 	local cmd
-	local rs=0
 	cmd="$STDDIALOG
 		--title 'Sound/Audio Setting' --default-item '$AUDID' --menu 'Sound setting:-' 10 60 2
 		'none'        'Disable/No sound'
 		'pulseaudio'  'A featureful, general-purpose sound server' ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	[ $rs -eq 0 ] && AUDID="$mch"
+	[ $? -eq 0 ] && AUDID="$mch"
 }
 
 
@@ -1248,17 +1269,15 @@ ArchDesktop() {
 	local mch
 	local num=`echo "$DESKLIST" | wc -w`
 	local cmd
-	local rs=0
 	local initch='mate'
 	cmd="$STDDIALOG --nocancel
-		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 21 80 13"
+		--title 'Desktop Environment / Window Manager' --default-item '$DESKTYPE' --menu 'Select the desktop:-' 22 80 14"
 	for ep in $DESKLIST ; do
 		cmd+=" '$ep' '${DESKDES[$ep]}'"
 	done
 	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	[ $rs -eq 0 ] && DESKTYPE=$mch
+	[ $? -eq 0 ] && DESKTYPE=$mch
 }
 
 
@@ -1365,6 +1384,28 @@ KeyboardMap() {
 }
 
 
+MirrorSetting() {
+	local mch
+	local cmd
+	cmd="$STDDIALOG --cancel-button 'Discard'
+		--title 'Mirror servers list Setting' --default-item '$MIRRORSET' --menu 'Mirror server setting:-' 10 45 2
+		'auto' 'Use the result from Reflector'
+		'set'  'Custom setting......[$CUSTOMSET]' ${SWAPSTD}"
+	mch=`eval $cmd`
+	rs=$?
+	if [ $rs -eq 0 ] ; then
+		MIRRORSET="$mch"
+		if [ "$mch" == "set" ] ; then
+			cmd="$STDDIALOG --nocancel
+				--title 'Mirror servers list Setting' --default-item '$MIRRORSET' --menu 'Mirror server setting:-' 10 45 2
+				'auto' 'Use the result from Reflector'
+				'set'  'Custom setting......[$CUSTOMSET]' ${SWAPSTD}"
+			mch=`eval $cmd`
+		fi
+	fi
+}
+
+
 #================================================
 #|          Preparing initial data              |
 #================================================
@@ -1413,9 +1454,9 @@ else
 	fi
 fi
 
-until [ $RS != 0 ]; do		# if rs==1 then QUIT
+until [ $RS -ne 0 ]; do		# if rs==1 then QUIT
 	MainMenu
-	if  [ $RS == 0 ]; then
+	if  [ $RS -eq 0 ]; then
 		case $MAINCH in
             0 ) KeyboardMap
                 ;;
