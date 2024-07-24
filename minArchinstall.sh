@@ -40,9 +40,9 @@ WaitReflector() {
 	done
 }
 
-#------------------------------------------------------------#
-#  If there is not a CLI-whiptail then installing by pacman  #
-#------------------------------------------------------------#
+#----------------------------------------------------------------#
+#  If there is not a CLI-whiptail then install them with pacman  #
+#----------------------------------------------------------------#
 if [ ! -f /usr/bin/whiptail ]; then
     pacman -Sy
     pacman --noconfirm -S whiptail
@@ -964,7 +964,7 @@ chmod 700 $sUPERHOME/autorun.sh" >> $CHROOTFILE
 mkdir -p $uSRCFG/{awesome,nitrogen} ; cp /etc/xdg/awesome/* $uSRCFG/awesome
 sed -i '/^terminal =/c\\\\terminal = \"alacritty\"' $uSRCFG/awesome/rc.lua
 sed -i 's/nano/vim/g' $uSRCFG/awesome/rc.lua
-sed -i '/local menubar =/c\\local menubar = require(\"menubar\")\\\\nlocal appmenu = require(\"appmenu\")' $uSRCFG/awesome/rc.lua
+sed -i '/local menubar =/c\\\\local menubar = require(\"menubar\")\\\\nlocal appmenu = require(\"appmenu\")' $uSRCFG/awesome/rc.lua
 sed -i 's/theme.lua\")/theme.lua\")\\\\nbeautiful.font=\"Monospace 12\"\\\\nbeautiful.menu_height=21\\\\nbeautiful.menu_width=280/g' $uSRCFG/awesome/rc.lua
 sed -i 's/\"quit\"/\"logout\"/g;s/\"restart\"/\"reload\"/g' $uSRCFG/awesome/rc.lua
 sed -i 's/terminal }/terminal },\\\\n		{ \"Applications\", appmenu.Appmenu }/g' $uSRCFG/awesome/rc.lua
