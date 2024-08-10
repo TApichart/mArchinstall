@@ -7,6 +7,7 @@ if [ ! -d $1 ] ; then
 	exit 5
 fi
 
-#sed -i 's/#Wayland/Wayland/g' /etc/gdm/custom.conf
+source /root/extGDM.sh
 
-systemctl enable gdm
+sed -i 's/#Wayland/Wayland/g' /etc/gdm/custom.conf
+

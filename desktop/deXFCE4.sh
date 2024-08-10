@@ -7,5 +7,6 @@ if [ ! -d $1 ] ; then
 	exit 5
 fi
 
+source /root/extLXDM.sh
+
 sed -i  '/# session=/c\session=startxfce4' /etc/lxdm/lxdm.conf
-systemctl enable lxdm

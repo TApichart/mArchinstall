@@ -13,6 +13,9 @@
 # =============================================================================================== #
 #
 declare DIRNAME="$(dirname -- "$(readlink -f -- "$0")")"
+declare EXTDIR="${DIRNAME}/extended"
+declare DESKDIR="${DIRNAME}/desktop"
+
 declare MINAI_LOCK="/var/minAI_LOCK.lck"
 
 if [ -f $MINAI_LOCK ] ; then
@@ -739,90 +742,96 @@ GenDesktopScript() {
 
 	case $DESKTYPE in
 		"mate" )
-			cp $DIRNAME/extLightDM.sh /root
-			cp $DIRNAME/deMATE.sh /root
+			cp $EXTDIR/extLightDM.sh /root
+			cp $DESKDIR/deMATE.sh /root
 			chmod u+x /root/deMATE.sh
 			echo "/root/deMATE.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# Mate Desktop
 		"xfce" )
-			cp $DIRNAME/deXFCE4.sh /root
+			cp $EXTDIR/extLXDM.sh /root
+			cp $DESKDIR/deXFCE4.sh /root
 			chmod u+x /root/deXFCE4.sh
 			echo "/root/deXFCE4.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# XFCE4 Desktop
 		"deepin" )
-			cp $DIRNAME/extLightDM.sh /root
-			cp $DIRNAME/deDEEPIN.sh /root
+			cp $EXTDIR/extLightDM.sh /root
+			cp $DESKDIR/deDEEPIN.sh /root
 			chmod u+x /root/deDEEPIN.sh
 			echo "/root/deDEEPIN.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# Deepin Desktop
 		"lxde" )
-			cp $DIRNAME/deLXDE.sh /root
+			cp $EXTDIR/extLXDM.sh /root
+			cp $DESKDIR/deLXDE.sh /root
 			chmod u+x /root/deLXDE.sh
 			echo "/root/deLXDE.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# LXDE Desktop
 		"lxqt" )
-			cp $DIRNAME/extLightDM.sh /root
-			cp $DIRNAME/deLXQT.sh /root
+			cp $EXTDIR/extLightDM.sh /root
+			cp $DESKDIR/deLXQT.sh /root
 			chmod u+x /root/deLXQT.sh
 			echo "/root/deLXQT.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# LXqt Desktop
 		"gnome" )
-			cp $DIRNAME/deGNOME.sh /root
+			cp $EXTDIR/extGDM.sh /root
+			cp $DESKDIR/deGNOME.sh /root
 			chmod u+x /root/deGNOME.sh
 			echo "/root/deGNOME.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# GNOME Desktop
 		"kde" )
-			echo "systemctl enable sddm" >> $CHROOTFILE
+			cp $EXTDIR/extSDDM.sh /root
+			cp $DESKDIR/deKDE.sh /root
+			chmod u+x /root/deKDE.sh
+			echo "/root/deKDE.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# KDE Desktop
 		"bspwm" )
-			cp $DIRNAME/extLightDM.sh /root
-			cp $DIRNAME/extNitrogen.sh /root
+			cp $EXTDIR/extLightDM.sh /root
+			cp $EXTDIR/extNitrogen.sh /root
 			chmod u+x /root/extNitrogen.sh
-			cp $DIRNAME/wmBSPWM.sh /root
+			cp $DESKDIR/wmBSPWM.sh /root
 			chmod u+x /root/wmBSPWM.sh
 			echo "/root/wmBSPWm.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# BSPWM Window Manager
 		"bspwm_th" )
-			cp $DIRNAME/extLightDM.sh /root
-			cp $DIRNAME/extNitrogen.sh /root
+			cp $EXTDIR/extLightDM.sh /root
+			cp $EXTDIR/extNitrogen.sh /root
 			chmod u+x /root/extNitrogen.sh
-			cp $DIRNAME/wmBSPWM.sh /root
+			cp $DESKDIR/wmBSPWM.sh /root
 			chmod u+x /root/wmBSPWM.sh
-			cp $DIRNAME/extPOLYTHEMES.sh /root
+			cp $EXTDIR/extPOLYTHEMES.sh /root
 			chmod u+x /root/extPOLYTHEMES.sh
-			cp $DIRNAME/extMPD.sh /root
+			cp $EXTDIR/extMPD.sh /root
 			chmod u+x /root/extMPD.sh
-			cp $DIRNAME/wmBSPWMTH.sh /root
+			cp $DESKDIR/wmBSPWMTH.sh /root
 			chmod u+x /root/wmBSPWMTH.sh
 			echo "/root/wmBSPWMTH.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# BSPWM Window Manager and Polybar-Themes
 		"cinnamon" )	
-			cp $DIRNAME/extLightDM.sh /root
-			cp $DIRNAME/deCINNAMON.sh /root
+			cp $EXTDIR/extLightDM.sh /root
+			cp $DESKDIR/deCINNAMON.sh /root
 			chmod u+x /root/deCINNAMON.sh
 			echo "/root/deCINNAMON $sUPERHOME" >> $CHROOTFILE
 			;;		# Cinnamon Desktop
 		"openbox" )
-			cp $DIRNAME/extLightDM.sh /root
-			cp $DIRNAME/extNitrogen.sh /root
+			cp $EXTDIR/extLightDM.sh /root
+			cp $EXTDIR/extNitrogen.sh /root
 			chmod u+x /root/extNitrogen.sh
-			cp $DIRNAME/wmOPENBOX.sh /root
+			cp $DESKDIR/wmOPENBOX.sh /root
 			chmod u+x /root/wmOPENBOX.sh
 			echo "/root/wmOPENBOX.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# OpenBox Window Manager
 		"i3wm" )
-			cp $DIRNAME/extSDDM.sh /root
-			cp $DIRNAME/extPOLYTHEMES.sh /root
+			cp $EXTDIR/extSDDM.sh /root
+			cp $EXTDIR/extPOLYTHEMES.sh /root
 			chmod u+x /root/extPOLYTHEMES.sh
-			cp $DIRNAME/extMPD.sh /root
+			cp $EXTDIR/extMPD.sh /root
 			chmod u+x /root/extMPD.sh
-			cp $DIRNAME/wmI3WM.sh /root
+			cp $DESKDIR/wmI3WM.sh /root
 			chmod u+x /root/wmI3WM.sh
 			echo "/root/wmI3WM.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# i3-wm Window Manager
 		"awesome" )
-			cp $DIRNAME/extSDDM.sh /root
-			cp $DIRNAME/wmAWESOME.sh /root
+			cp $EXTDIR/extSDDM.sh /root
+			cp $DESKDIR/wmAWESOME.sh /root
 			chmod u+x /root/wmAWESOME.sh
 			echo "/root/wmAWESOME.sh $sUPERHOME" >> $CHROOTFILE
 			if [ "$TIMEZONE" == "$THAIZONE" ] ; then
@@ -830,9 +839,9 @@ GenDesktopScript() {
 			fi
 			;;	# == awesome Window Manager ==
 		"qtile" )
-			cp $DIRNAME/extLightDM.sh /root
-			cp $DIRNAME/extNitrogen.sh /root
-			cp $DIRNAME/ext/wmQTILE.sh /root
+			cp $EXTDIR/extLightDM.sh /root
+			cp $EXTDIR/extNitrogen.sh /root
+			cp $DESKDIR/wmQTILE.sh /root
 			chmod u+x /root/wmQTILE.sh
 			echo "/root/wmQTILE.sh $sUPERHOME" >> $CHROOTFILE
 			if [ "$TIMEZONE" == "$THAIZONE" ] ; then
@@ -843,7 +852,7 @@ GenDesktopScript() {
 
 	# ========= The tail scipts :- for Installl of Desktop / Window Manager ============== #
 	if [ "$RESOLUTION" != 'not define' ] ; then
-		cp $DIRNAME/extMonitor.sh /root
+		cp $EXTDIR/extMonitor.sh /root
 		chmod u+x /root/extMonitor.sh
 		echo "/root/extMonitor.sh $RESOLUTION" >> $CHROOTFILE
 	fi
@@ -894,7 +903,7 @@ sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/g' /etc/sudoers
 chown ${SUPERUSR}:users /home/${SUPERUSR}/.vimrc
 chmod 600 /home/${SUPERUSR}/.vimrc"
 
-	cp $DIRNAME/extVIMrc.sh /root
+	cp $EXTDIR/extVIMrc.sh /root
 	chmod u+x /root/extVIMrc.sh
 	echo -e "$rOOTSCRIPT1" > $CHROOTFILE
 	[ ${SRVCHK["openssh"]} == "on" ] && echo "systemctl enable sshd" >> $CHROOTFILE
@@ -914,7 +923,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 	echo "$rOOTSCRIPT2" >> $CHROOTFILE
 	[ $ROOTABLE == "disable" ] && echo "usermod -s /usr/bin/nologin root" >> $CHROOTFILE
 	if [ "${OPCHCK['iptables']}" == "on" ] ; then
-		cp $DIRNAME/extIPtables.sh /root
+		cp $EXTDIR/extIPtables.sh /root
 		chmod u+x /root/extIPtables.sh
 		local aCCEPTsshd="none"
 		[ "${SRVCHK['openssh']}" == 'on' ] && aCCEPTsshd="sshd"
@@ -1314,5 +1323,6 @@ tput cvvis
 [ -f $CHROOTFILE ] && rm $CHROOTFILE
 [ -f $INITFILE ] && rm $INITFILE
 [ -f $MINAI_LOCK ] && rm $MINAI_LOCK
+rm /root/ext*.sh /root/de*.sh /root/wm*.sh
 
 exit 0

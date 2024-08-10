@@ -7,4 +7,4 @@ if [ ! -d $1 ] ; then
 	exit 5
 fi
 
-systemctl enable lxdm
+source /root/extLXDM.sh
