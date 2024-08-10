@@ -1,17 +1,19 @@
 #!/bin/bash
 # =============================================================================================== #
-# |                   minArchinstall.sh   Version 1.1.0                                           |
+# |                   minArchinstall.sh   Version 1.2.0                                           |
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
-# | Last Modified: July,14 2024                                                                   |
+# | Last Modified: August,8 2024                                                                   |
 # | License : CC0 -                                                                               |
 # |     CC0 (aka CC Zero) is a public dedication tool, which enables creators to give up          |
 # |     their copyright and put their works into the worldwide public domain. CC0                 |
 # |     enables reusers to distribute, remix, adapt, and build upon the material in any medium or |
 # |     format, with no conditions.                                                               |
 # =============================================================================================== #
-MINAI_LOCK="/var/minAI_LOCK.lck"
+#
+declare DIRNAME="$(dirname -- "$(readlink -f -- "$0")")"
+declare MINAI_LOCK="/var/minAI_LOCK.lck"
 
 if [ -f $MINAI_LOCK ] ; then
 	bpid=`cat $MINAI_LOCK`
@@ -48,13 +50,6 @@ if [ ! -f /usr/bin/whiptail ]; then
     pacman --noconfirm -S whiptail
 fi
 
-#--------------------------------------------------#
-#  git module - for installl additional            #
-#--------------------------------------------------#
-GITCLONE="git clone https://aur.archlinux.org"
-PERLLINUX="perl-linux-desktopfiles"
-OBMENU="obmenu-generator"
-PKGMAKE="makepkg -s"
 #--------------------------------------------------#
 RESOLUTION="1920x1080"
 TZFILE="/tmp/minAI_timezone.tmp"
@@ -387,16 +382,14 @@ SuperPassword() {
 
 RootPassword() {
 	local mch
-	local idx=0
 	local cmd
-	local rs
 	local initpass=$ROOTPASS
     tput cvvis
 	cmd="$STDDIALOG
 		--title \"Set root's password\" --passwordbox \"Enter password:-\" 11 48 '$initpass' ${SWAPSTD}"
 	mch=`eval $cmd`
+	local rs=$?
     tput civis
-	rs=$?
 	if [ $rs -eq 0 ] ; then
 		local ck=$(CheckPassword "$mch")
 		if [ "$ck" == "Valid password" ]; then
@@ -414,15 +407,13 @@ RootPassword() {
 RootSelect() {
 	local mch
 	local cmd
-	local rs=0
 	local initch="$ROOTABLE"
 	cmd="$STDDIALOG --cancel-button 'Back'
 		--title 'Setting root user' --default-item \"$initch\" --menu 'Select menu:-' 11 65 3
 		'disable'   'Disable - root can not login'
 		'enable'    'Enable - set password for root' ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	if [ $rs -eq 0 ] ; then
+	if [ $? -eq 0 ] ; then
 		if [ "$mch" == "enable" ]; then
 			RootPassword
 		else
@@ -496,7 +487,7 @@ OptionalCLI(){
 	done
 	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
+	local rs=$?
     mch=`echo $mch | sed 's/"//g'`
 	if [ $rs -eq 0 ]; then
 		for ep in $OPTIONS ; do
@@ -523,7 +514,7 @@ ServerPackages(){
 	done
 	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
+	local rs=$?
     mch=`echo $mch | sed 's/"//g'`
 	if [ $rs -eq 0 ]; then
 		for ep in $OPTSERV ; do
@@ -732,94 +723,10 @@ swapon ${devdisk}2"
 
 #=================== GenDesktopScript() ===================#
 GenDesktopScript() {
-	local mONITOR1="Section \\\"Monitor\\\"
-	Identifier \\\"Virtual-1\\\"
-	Option \\\"PreferredMode\\\" \\\"$RESOLUTION\\\"
-	Option \\\"Primary\\\" \\\"1\\\"
-EndSection"
 	local sUPERHOME="/home/$SUPERUSR"
 	local uSRCFG="$sUPERHOME/.config"
-	local bGDIR="/usr/share/backgrounds/archlinux"
-	local bGSAVED="[xin_-1]
-file=$bGDIR/awesome.png
-mode=4
-bgcolor=#000000 "
-	local nITROGEN="[geometry]
-posx=0
-posy=0
-sizex=516
-sizey=500
-
-[nitrogen]
-view=icon
-recurse=true
-sort=alpha
-icon_caps=false
-dirs=$bGDIR; "
-	local lIGHTBG="sed -i '/#background=/c\\background=/usr/share/backgrounds/archlinux/geowaves.png' /etc/lightdm/lightdm-gtk-greeter.conf"
-
-	local bSPWMSCRT="mkdir -p $uSRCFG/{bspwm,sxhkd,polybar,picom,nitrogen}
-cp /usr/share/doc/bspwm/examples/bspwmrc $uSRCFG/bspwm
-cp /usr/share/doc/bspwm/examples/sxhkdrc $uSRCFG/sxhkd
-cp /etc/xdg/picom.conf $uSRCFG/picom
-cp /etc/polybar/config.ini $uSRCFG/polybar
-chmod +x $uSRCFG/bspwmrc
-echo 'pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf &
-nitrogen --restore &
-
-# ========== Polybar or Polybar-Themes ========== #
-pgrep -x polybar > /dev/null || polybar &' >> $uSRCFG/bspwm/bspwmrc
-
-sed -i 's/bspc rule/#bspc rule/g' $uSRCFG/bspwm/bspwmrc
-sed -i 's/urxvt/mate-terminal --hide-menubar/g' $uSRCFG/sxhkd/sxhkdrc
-echo 'super + e
-	thunar' >> $uSRCFG/sxhkd/sxhkdrc
-echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
-echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
-$lIGHTBG
-systemctl enable lightdm"
-
-	local mpdCFG="# See: /usr/share/doc/mpd/mpdconf.example\n
-pid_file \\\"~/.config/mpd/pid\\\"
-db_file \\\"~/.config/mpd/mpd.db\\\"
-state_file \\\"~/.config/mpd/state\\\"
-playlist_directory \\\"~/.config/mpd/playlists\\\"
-music_directory \\\"~/Music\\\"
-auto_update \\\"yes\\\"
-
-audio_output {
-	type	\\\"pulse\\\"
-	name	\\\"pulse audio\\\"
-}
-
-audio_output {
-	type	\\\"fifo\\\"
-	name	\\\"my_fifo\\\"
-	path	\\\"/tmp/mpd.fifo\\\"
-	format	\\\"44100:16:2\\\"
-}
-
-bind_to_address  \\\"127.0.0.1\\\"
-port \\\"6600\\\""
-
-	local plusTHEMES="\n# Polybar-Themes
-pushd \$PWD
-cd /opt
-$GITCLONE/networkmanager-dmenu-git.git
-git clone https://github.com/adi1090x/polybar-themes.git
-popd
-chown -R $SUPERUSR:users /opt/{networkmanager-dmenu-git,polybar-themes}
-su -c 'cd /opt/networkmanager-dmenu-git ; $PKGMAKE' - $SUPERUSR
-pacman --noconfirm -U /opt/networkmanager-dmenu-git/*.tar.zst
-mv $uSRCFG/polybar $uSRCFG/polybar.0
-mkdir -p /usr/local/share/{fonts,backgrounds} $uSRCFG/{polybar,mpd/playlists}
-cp -fr /opt/polybar-themes/fonts/* /usr/local/share/fonts
-cp -fr /opt/polybar-themes/wallpapers/* /usr/local/share/backgrounds
-cp -rf /opt/polybar-themes/simple/* $uSRCFG/polybar
-cp -rf /opt/polybar-themes/bitmap/hack/* $uSRCFG/polybar/hack
-cp -rf /opt/polybar-themes/bitmap/shades/* $uSRCFG/polybar/shades
-cp -rf /opt/polybar-themes/bitmap/shapes/* $uSRCFG/polybar/shapes"
-
+#	local bGDIR="/usr/share/backgrounds/archlinux"
+	
 	# =============== Static install packages :- xorg, network-manater-applet archlinux-wallpaper ============== #
 	echo -e "\npacman --noconfirm -S xorg network-manager-applet archlinux-wallpaper" >> $CHROOTFILE
 
@@ -832,174 +739,102 @@ cp -rf /opt/polybar-themes/bitmap/shapes/* $uSRCFG/polybar/shapes"
 
 	case $DESKTYPE in
 		"mate" )
-			echo "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf\n" >> $CHROOTFILE
-			echo "$lIGHTBG" >> $CHROOTFILE
-			echo "systemctl enable lightdm" >> $CHROOTFILE
+			cp $DIRNAME/extLightDM.sh /root
+			cp $DIRNAME/deMATE.sh /root
+			chmod u+x /root/deMATE.sh
+			echo "/root/deMATE.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# Mate Desktop
 		"xfce" )
-			echo "sed -i '/# session=/c\\session=startxfce4' /etc/lxdm/lxdm.conf" >> $CHROOTFILE
-			echo "systemctl enable lxdm" >> $CHROOTFILE
+			cp $DIRNAME/deXFCE4.sh /root
+			chmod u+x /root/deXFCE4.sh
+			echo "/root/deXFCE4.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# XFCE4 Desktop
 		"deepin" )
-			echo "sed -i '/#greeter-session=/c\\greeter-session=lightdm-gtk-greeter' /etc/lightdm/lightdm.conf" >> $CHROOTFILE
-			echo "$lIGHTBG" >> $CHROOTFILE
-			echo "systemctl enable lightdm" >> $CHROOTFILE
-			echo "pacman --noconfirm -S deepin-{terminal,calculator,clipboard,community-wallpapers}" >> $CHROOTFILE
-			echo "[ \$? -ne 0 ] && PauseError 'Install [deepin] incomplete.'" >> $CHROOTFILE
+			cp $DIRNAME/extLightDM.sh /root
+			cp $DIRNAME/deDEEPIN.sh /root
+			chmod u+x /root/deDEEPIN.sh
+			echo "/root/deDEEPIN.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# Deepin Desktop
 		"lxde" )
-			echo "systemctl enable lxdm" >> $CHROOTFILE
+			cp $DIRNAME/deLXDE.sh /root
+			chmod u+x /root/deLXDE.sh
+			echo "/root/deLXDE.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# LXDE Desktop
 		"lxqt" )
-			echo "sed -i '/#greeter-session=/c\\greeter-session=lightdm-webkit2-greeter' /etc/lightdm/lightdm.confn" >> $CHROOTFILE
-			echo "$lIGHTBG" >> $CHROOTFILE
-			echo "sed -i 's/= antergos/= litarvan/g' /etc/lightdm/lightdm-webkit2-greeter.conf" >> $CHROOTFILE
-			echo "sed -i 's/icon_theme=oxygen/icon_theme=Adwaita/g' /usr/share/lxqt/lxqt.conf" >> $CHROOTFILE
-			echo "sed -i '/icon_theme=/c\\icon_theme=breeze-dark' $uSRCFG/lxqt/lxqt.conf" >> $CHROOTFILE
-			echo "systemctl enable lightdm" >> $CHROOTFILE
+			cp $DIRNAME/extLightDM.sh /root
+			cp $DIRNAME/deLXQT.sh /root
+			chmod u+x /root/deLXQT.sh
+			echo "/root/deLXQT.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# LXqt Desktop
 		"gnome" )
-			echo "sed -i 's/#Wayland/Wayland/g' /etc/gdm/custom.conf" >> $CHROOTFILE
-			echo "systemctl enable gdm" >> $CHROOTFILE
+			cp $DIRNAME/deGNOME.sh /root
+			chmod u+x /root/deGNOME.sh
+			echo "/root/deGNOME.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# GNOME Desktop
 		"kde" )
 			echo "systemctl enable sddm" >> $CHROOTFILE
 			;;		# KDE Desktop
 		"bspwm" )
-			echo "$bSPWMSCRT" >> $CHROOTFILE
-			echo "chown -R $SUPERUSR:users $sUPERHOME" >> $CHROOTFILE
+			cp $DIRNAME/extLightDM.sh /root
+			cp $DIRNAME/extNitrogen.sh /root
+			chmod u+x /root/extNitrogen.sh
+			cp $DIRNAME/wmBSPWM.sh /root
+			chmod u+x /root/wmBSPWM.sh
+			echo "/root/wmBSPWm.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# BSPWM Window Manager
 		"bspwm_th" )
-			echo "$bSPWMSCRT" >> $CHROOTFILE
-			echo "sed -i '/pgrep -x polybar/c\\~/.config/polybar/launch.sh --forest' $uSRCFG/bspwm/bspwmrc
-# ==== Insert Media player to BSPWM cofig ==== #
-echo \"# ======== Media Player ========
-[ ! -s ~/.config/mpd/pid ] && mpd
-mpc clear ; mpc add /
-\" >> $uSRCFG/bspwm/bspwmrc" >> $CHROOTFILE
-			echo -e "$plusTHEMES" >> $CHROOTFILE
-			echo "echo -e \"${mpdCFG}\" > $uSRCFG/mpd/mpd.conf" >> $CHROOTFILE
-			echo "chown $SUPERUSR:users $uSRCFG/mpd/mpd.conf" >> $CHROOTFILE
-			echo "chown -R $SUPERUSR:users $sUPERHOME" >> $CHROOTFILE
+			cp $DIRNAME/extLightDM.sh /root
+			cp $DIRNAME/extNitrogen.sh /root
+			chmod u+x /root/extNitrogen.sh
+			cp $DIRNAME/wmBSPWM.sh /root
+			chmod u+x /root/wmBSPWM.sh
+			cp $DIRNAME/extPOLYTHEMES.sh /root
+			chmod u+x /root/extPOLYTHEMES.sh
+			cp $DIRNAME/extMPD.sh /root
+			chmod u+x /root/extMPD.sh
+			cp $DIRNAME/wmBSPWMTH.sh /root
+			chmod u+x /root/wmBSPWMTH.sh
+			echo "/root/wmBSPWMTH.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# BSPWM Window Manager and Polybar-Themes
-		"cinnamon" )
-			echo "$lIGHTBG" >> $CHROOTFILE
-			echo "systemctl enable lightdm" >> $CHROOTFILE
+		"cinnamon" )	
+			cp $DIRNAME/extLightDM.sh /root
+			cp $DIRNAME/deCINNAMON.sh /root
+			chmod u+x /root/deCINNAMON.sh
+			echo "/root/deCINNAMON $sUPERHOME" >> $CHROOTFILE
 			;;		# Cinnamon Desktop
 		"openbox" )
-			local aPPEND1="    {beg => ['Shutdown-Menu', 'open-menu-symbolic']}, \\n\\
-		{item => ['poweroff -i', 'Shutdown', 'system-shutdown-symbolic']}, \\n\\
-		{item => ['reboot', 'Restart', 'view-refresh-symbolic']}, \\n\\
-		{exit => ['Exit-OpenBox', 'application-exit']}, \\n\\
-		{end => undef}, \\n\\
-]"
-			local aPPEND2="<?xml version='1.0' encoding='utf-8'?>
-<openbox_menu xmlns='http://openbox.org/' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='http://openbox.org/'>
-	<menu id='root-menu' label='obmenu-generator' execute='/usr/bin/obmenu-generator -i' />
-</openbox_menu>"
-			local oPENAUTO="pgrep -x tint2 > /dev/null || tint2 &
-nitrogen --restore &
-pgrep -x picom > /dev/null || picom --config ~/.config/picom/picom.conf &"
-			local tINT2RC="mate-terminal.desktop \\n\\
-launcher_item_app = geany.desktop \\n\\
-launcher_item_app = thunar.desktop \\n\\
-launcher_item_app = nitrogen.desktop \\n\\
-launcher_item_app = obconf.desktop"
-			local oPENSCRT="mkdir -p $uSRCFG/{tint2,openbox,$OBMENU,picom,nitrogen}
-cp -R /etc/xdg/{tint2,openbox} $uSRCFG
-echo \"$oPENAUTO\" >> $uSRCFG/openbox/autostart
-pushd \$PWD
-cd /opt
-$GITCLONE/$PERLLINUX.git
-$GITCLONE/$OBMENU.git
-popd
-chown -R $SUPERUSR:users /opt/$PERLLINUX /opt/$OBMENU
-su -c 'cd /opt/$PERLLINUX ; $PKGMAKE' - $SUPERUSR
-pacman --noconfirm -U /opt/$PERLLINUX/*.tar.zst
-su -c 'cd /opt/$OBMENU ; $PKGMAKE' - $SUPERUSR
-pacman --noconfirm -U /opt/$OBMENU/*.tar.zst
-sed -i 's/xterm/mate-terminal/g;/xscreensaver-command/d;/application-exit/d' /etc/xdg/$OBMENU/schema.pl
-sed -i \"s/^]/$aPPEND1/\" /etc/xdg/$OBMENU/schema.pl
-sed -i '/iceweasel.desktop/d;/chromium/d' $uSRCFG/tint2/tint2rc
-sed -i \"s/google-chrome.desktop/${tINT2RC}/g\" $uSRCFG/tint2/tint2rc
-cp /etc/xdg/picom.conf $uSRCFG/picom
-cp /etc/xdg/$OBMENU/* $uSRCFG/$OBMENU
-echo \"$aPPEND2\" > $uSRCFG/openbox/menu.xml
-echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
-echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
-chown -R $SUPERUSR:users $sUPERHOME
-$lIGHTBG
-systemctl enable lightdm"
-			echo "$oPENSCRT" >> $CHROOTFILE
+			cp $DIRNAME/extLightDM.sh /root
+			cp $DIRNAME/extNitrogen.sh /root
+			chmod u+x /root/extNitrogen.sh
+			cp $DIRNAME/wmOPENBOX.sh /root
+			chmod u+x /root/wmOPENBOX.sh
+			echo "/root/wmOPENBOX.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# OpenBox Window Manager
 		"i3wm" )
-			echo "systemctl enable sddm" >> $CHROOTFILE
-			echo -e "$plusTHEMES" >> $CHROOTFILE
-			echo "mkdir -p $uSRCFG/{i3,picom} ; cp /etc/i3/config $uSRCFG/i3
-cp /etc/xdg/picom.conf $uSRCFG/picom
-cp /etc/polybar/config.ini $uSRCFG/polybar
-cp /etc/i3blocks.conf $sUPERHOME/.i3blocks.conf
-cp /etc/i3status.conf $sUPERHOME/.i3status.conf
-chmod 600 $sUPERHOME/.i3*.conf
-sed -i 's/i3-sensible-terminal/alacritty/g' $uSRCFG/i3/config
-echo -e \"${mpdCFG}\" > $uSRCFG/mpd/mpd.conf
-sed -i '/font pango:monospace/c\\set \$mod Mod4\\nfont pango:monospace 8' $uSRCFG/i3/config
-sed -i 's/Mod1/\$mod/g' $uSRCFG/i3/config
-sed -i '/exec i3-config/c\\exec_always ~/autorun.sh' $uSRCFG/i3/config
-#### Create   autorun.sh #####
-echo '#!/usr/bin/bash
-
-picom --config $uSRCFG/picom/picom.conf &
-feh --bg-fill /usr/local/share/backgrounds/bg_3.jpg &
-$uSRCFG/polybar/launch.sh --blocks &
-
-[ ! -s ~/.config/mpd/pid ] && mpd
-mpc clear ; mpc add / ' > $sUPERHOME/autorun.sh
-#### ---- autorun.sh ---- #####
-chown -R $SUPERUSR:users $sUPERHOME
-chmod 700 $sUPERHOME/autorun.sh" >> $CHROOTFILE
+			cp $DIRNAME/extSDDM.sh /root
+			cp $DIRNAME/extPOLYTHEMES.sh /root
+			chmod u+x /root/extPOLYTHEMES.sh
+			cp $DIRNAME/extMPD.sh /root
+			chmod u+x /root/extMPD.sh
+			cp $DIRNAME/wmI3WM.sh /root
+			chmod u+x /root/wmI3WM.sh
+			echo "/root/wmI3WM.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# i3-wm Window Manager
 		"awesome" )
-			echo -e "systemctl enable sddm
-mkdir -p $uSRCFG/{awesome,nitrogen} ; cp /etc/xdg/awesome/* $uSRCFG/awesome
-sed -i '/^terminal =/c\\\\terminal = \"alacritty\"' $uSRCFG/awesome/rc.lua
-sed -i 's/nano/vim/g' $uSRCFG/awesome/rc.lua
-sed -i '/local menubar =/c\\\\local menubar = require(\"menubar\")\\\\nlocal appmenu = require(\"appmenu\")' $uSRCFG/awesome/rc.lua
-sed -i 's/theme.lua\")/theme.lua\")\\\\nbeautiful.font=\"Monospace 12\"\\\\nbeautiful.menu_height=21\\\\nbeautiful.menu_width=280/g' $uSRCFG/awesome/rc.lua
-sed -i 's/\"quit\"/\"logout\"/g;s/\"restart\"/\"reload\"/g' $uSRCFG/awesome/rc.lua
-sed -i 's/terminal }/terminal },\\\\n		{ \"Applications\", appmenu.Appmenu }/g' $uSRCFG/awesome/rc.lua
-echo '\nawful.spawn.with_shell(\"~/.config/awesome/autorun.sh\")' >> $uSRCFG/awesome/rc.lua
-echo '#!/usr/bin/bash
-
-killall -9 awesome-appmenu
-nitrogen --restore &
-awesome-appmenu &' > $uSRCFG/awesome/autorun.sh
-pushd \$PWD
-cd /opt
-git clone https://github.com/montagdude/awesome-appmenu.git
-chown -R $SUPERUSR:users /opt/awesome-appmenu
-su -c 'cd /opt/awesome-appmenu ; $PKGMAKE' - $SUPERUSR
-pacman --noconfirm -U /opt/awesome-appmenu/*.tar.zst
-popd
-echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
-echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
-chown -R $SUPERUSR:users $sUPERHOME
-chmod 700 $uSRCFG/awesome/autorun.sh" >> $CHROOTFILE
+			cp $DIRNAME/extSDDM.sh /root
+			cp $DIRNAME/wmAWESOME.sh /root
+			chmod u+x /root/wmAWESOME.sh
+			echo "/root/wmAWESOME.sh $sUPERHOME" >> $CHROOTFILE
 			if [ "$TIMEZONE" == "$THAIZONE" ] ; then
 				echo "echo 'setxkbmap -option \"grp:alt_space_toggle\" -layout \"us,th\"' >> $uSRCFG/awesome/autorun.sh" >> $CHROOTFILE
 			fi
 			;;	# == awesome Window Manager ==
 		"qtile" )
-			echo "$lIGHTBG
-systemctl enable lightdm
-mkdir -p $uSRCFG/{nitrogen,picom} 
-cp /etc/xdg/picom.conf $uSRCFG/picom/
-echo 'killall -9 picom
-nitrogen --restore &
-picom --config $uSRCFG/picom/picom.conf &' > $sUPERHOME/.xprofile
-echo \"$bGSAVED\" > $uSRCFG/nitrogen/bg-saved.cfg
-echo \"$nITROGEN\" > $uSRCFG/nitrogen/nitrogen.cfg
-chown -R $SUPERUSR:users $sUPERHOME" >> $CHROOTFILE
+			cp $DIRNAME/extLightDM.sh /root
+			cp $DIRNAME/extNitrogen.sh /root
+			cp $DIRNAME/ext/wmQTILE.sh /root
+			chmod u+x /root/wmQTILE.sh
+			echo "/root/wmQTILE.sh $sUPERHOME" >> $CHROOTFILE
 			if [ "$TIMEZONE" == "$THAIZONE" ] ; then
 				echo "echo 'setxkbmap -option \"grp:alt_space_toggle\" -layout \"us,th\"' >> $sUPERHOME/.xprofile" >> $CHROOTFILE
 			fi
@@ -1007,7 +842,11 @@ chown -R $SUPERUSR:users $sUPERHOME" >> $CHROOTFILE
 	esac
 
 	# ========= The tail scipts :- for Installl of Desktop / Window Manager ============== #
-	[ "$RESOLUTION" != 'not define' ] && echo "echo \"$mONITOR1\" > /etc/X11/xorg.conf.d/01-monitor.conf" >> $CHROOTFILE
+	if [ "$RESOLUTION" != 'not define' ] ; then
+		cp $DIRNAME/extMonitor.sh /root
+		chmod u+x /root/extMonitor.sh
+		echo "/root/extMonitor.sh $RESOLUTION" >> $CHROOTFILE
+	fi
 	echo "pacman --noconfirm -S ${VDOPACK[$VDOID]}" >> $CHROOTFILE
 	echo "[ \$? -ne 0 ] && PauseError 'Install [${VDOPACK[$VDOID]}] incomplete.'" >> $CHROOTFILE
 	if [ $AUDID != "none" ]; then
@@ -1015,8 +854,6 @@ chown -R $SUPERUSR:users $sUPERHOME" >> $CHROOTFILE
 	fi
 	echo "pacman --noconfirm -S $XFIXPK $XPACKS" >> $CHROOTFILE
 	echo "[ \$? -ne 0 ] && PauseError 'Additional packages for GUI incomplete.'" >> $CHROOTFILE
-	# ========= Fix Awesome Menu ========= #
-	[ "$DESKTYPE" == "awesome" ] && echo "su -c 'awesome-appmenu' - $SUPERUSR" >> $CHROOTFILE
 }
 #=================== GenDesktopScript() ===================#
 
@@ -1053,16 +890,12 @@ useradd -m -g users -G wheel,storage,power,audio,video ${SUPERUSR}
 echo '${SUPERUSR}:${SUPERPAS}' | chpasswd
 sed -i 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/g' /etc/sudoers
 sed -i 's/# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/g' /etc/sudoers
-echo \"source \\\$VIMRUNTIME/defaults.vim 
-set number
-syntax on
-set showmatch
-set ruler
-set smarttab
-set ts=4 sw=4\" > /home/${SUPERUSR}/.vimrc
+/root/extVIMrc.sh /home/$SUPERUSR
 chown ${SUPERUSR}:users /home/${SUPERUSR}/.vimrc
 chmod 600 /home/${SUPERUSR}/.vimrc"
 
+	cp $DIRNAME/extVIMrc.sh /root
+	chmod u+x /root/extVIMrc.sh
 	echo -e "$rOOTSCRIPT1" > $CHROOTFILE
 	[ ${SRVCHK["openssh"]} == "on" ] && echo "systemctl enable sshd" >> $CHROOTFILE
 	if [ "${OPCHCK["neofetch"]}" == "on" ] ; then
@@ -1081,33 +914,11 @@ grub-mkconfig -o /boot/grub/grub.cfg
 	echo "$rOOTSCRIPT2" >> $CHROOTFILE
 	[ $ROOTABLE == "disable" ] && echo "usermod -s /usr/bin/nologin root" >> $CHROOTFILE
 	if [ "${OPCHCK['iptables']}" == "on" ] ; then
-		local aCCEPTsshd=""
-		[ "${SRVCHK['openssh']}" == 'on' ] && aCCEPTsshd="-A TCP -p tcp --dport 22 -j ACCEPT"
-		echo "echo \"# Empty iptables rule file
-*filter
-:INPUT DROP [0:0]
-:FORWARD DROP [0:0]
-:OUTPUT ACCEPT [0:0]
-:TCP - [0:0]
-:UDP - [0:0]
--A INPUT -m conntrack --ctstate RELATE,ESTABLISHED -j ACCEPT
--A INPUT -i lo -j ACCEPT
--A INPUT -m conntrack --ctstate NEW -j UDP
--A INPUT -p icmp -m icmp --icmp-type 8 -m conntrack --ctstate NEW -j ACCEPT
--A INPUT -p udp -m conntrack --ctstate NEW -j UDP
--A INPUT -p tcp --tcp-flags FIN,SYN,RST,ACK SYN -m conntrack --ctstate NEW -j TCP
--A INPUT -p udp -j REJECT --reject-with icmp-port-unreachable
--A INPUT -p tcp -j REJECT --reject-with tcp-reset
--A INPUT -j REJECT --reject-with icmp-proto-unreachable
-# === If you need more services to listening on network, Add the lines below:- ===
-#-A TCP -p tcp --dport 22 -j ACCEPT
-#-A INPUT -p tcp -m tcp --syn -m conntrack --ctstate NEW --dport 22 -j ACCEPT
-#-A TCP -p tcp --dport 443 -j ACCEPT
-# ================================================================================
-${aCCEPTsshd}
-COMMIT
-\" > /etc/iptables/iptables.rules
-systemctl enable iptables" >> $CHROOTFILE
+		cp $DIRNAME/extIPtables.sh /root
+		chmod u+x /root/extIPtables.sh
+		local aCCEPTsshd="none"
+		[ "${SRVCHK['openssh']}" == 'on' ] && aCCEPTsshd="sshd"
+		echo "/root/extIPtables.sh $aCCEPTsshd" >> $CHROOTFILE
 	fi
 }
 #=================== GenRootScript() ===================#
@@ -1151,6 +962,9 @@ genfstab -U /mnt >> /mnt/etc/fstab"
 echo 'FONT=ter-v20n' > /mnt/etc/vconsole.conf
 ln -sf /usr/share/zoneinfo/$TIMEZONE /mnt/etc/localtime
 cp $CHROOTFILE /mnt${CHROOTFILE}
+cp /root/ext*.sh /mnt/root
+cp /root/wm*.sh /mnt/root
+cp /root/de*.sh /mnt/root
 chmod 700 /mnt${CHROOTFILE}
 cp /etc/pacman.conf /mnt/etc/pacman.conf
 arch-chroot /mnt $CHROOTFILE
