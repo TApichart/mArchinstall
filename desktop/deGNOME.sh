@@ -9,5 +9,4 @@ fi
 
 source /root/extGDM.sh
 
-sed -i 's/#Wayland/Wayland/g' /etc/gdm/custom.conf
 
