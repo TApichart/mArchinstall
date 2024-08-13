@@ -13,7 +13,7 @@ echo "[xin_-1]
 file=$bGDIR/awesome.png
 mode=4
 bgcolor=#000000
-" > $nCFG/bg-save.cfg
+" > $nCFG/bg-saved.cfg
 
 echo "[geometry]
 posx=0
