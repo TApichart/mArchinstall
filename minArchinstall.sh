@@ -4,7 +4,7 @@
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
-# | Last Modified: August,8 2024                                                                   |
+# | Last Modified: August,13 2024                                                                   |
 # | License : CC0 -                                                                               |
 # |     CC0 (aka CC Zero) is a public dedication tool, which enables creators to give up          |
 # |     their copyright and put their works into the worldwide public domain. CC0                 |
@@ -789,7 +789,7 @@ GenDesktopScript() {
 			chmod u+x /root/extNitrogen.sh
 			cp $DESKDIR/wmBSPWM.sh /root
 			chmod u+x /root/wmBSPWM.sh
-			echo "/root/wmBSPWm.sh $sUPERHOME" >> $CHROOTFILE
+			echo "/root/wmBSPWM.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# BSPWM Window Manager
 		"bspwm_th" )
 			cp $EXTDIR/extLightDM.sh /root
