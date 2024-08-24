@@ -4,7 +4,7 @@
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
-# | Last Modified: August,13 2024                                                                   |
+# | Last Modified: August,22 2024                                                                 |
 # | License : CC0 -                                                                               |
 # |     CC0 (aka CC Zero) is a public dedication tool, which enables creators to give up          |
 # |     their copyright and put their works into the worldwide public domain. CC0                 |
@@ -139,7 +139,7 @@ SRVCHK["postgresql"]="off"
 
 declare XPKLIST="vlc firefox libreoffice mousepad leafpad geany notepadqq gimp inkscape darktable freecad xdg-user-dirs gvfs"
 declare XPACKS="vlc firefox mousepad xdg-user-dirs"
-declare XFIXPK="noto-fonts gnu-free-fonts ttf-dejavu ttf-liberation ttf-droid ttf-font-awesome"
+declare XFIXPK="noto-fonts gnu-free-fonts ttf-dejavu ttf-liberation ttf-droid ttf-font-awesome noto-fonts-emoji ttf-joypixels gnome-characters"
 declare -A XPKDES
 XPKDES["vlc"]="Media player"
 XPKDES["firefox"]="Firefox Web Browser"
@@ -620,12 +620,15 @@ PartRootWhole() {
 	local nxpart="$3"
 	echo -e "$ROOTPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 $nxpart 100%"
+	echo "[ \$? -ne 0 ] && HaltError 'Create root Partition..\!'"
 	echo -e "$FORMATLABEL"
 	echo "mkfs.ext4 -F ${devdisk}${nroot}"
 	echo -e "$MOUNTLABEL"
 	echo "mount ${devdisk}${nroot} /mnt"
+	echo "[ \$? -ne 0 ] && HaltError 'Mount root Partition..\!'"
 	echo "mkdir -p /mnt/boot/EFI"
 	echo "mount ${devdisk}1 /mnt/boot/EFI"
+	echo "[ \$? -ne 0 ] && HaltError 'Mount EFI boot Partition..\!'"
 }
 
 
@@ -636,16 +639,21 @@ PartRootHome() {
 	local -i nhome=nroot+1
 	echo -e "$ROOTPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB"
+	echo "[ \$? -ne 0 ] && HaltError 'Create root Partition..\!'"
 	echo -e "$HOMEPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 20GiB 100%"
+	echo "[ \$? -ne 0 ] && HaltError 'Create /home Partition..\!'"
 	echo -e "$FORMATLABEL"
 	echo "mkfs.ext4 -F ${devdisk}${nroot}"
 	echo "mkfs.ext4 -F ${devdisk}${nhome}"
 	echo -e "$MOUNTLABEL"
 	echo "mount ${devdisk}${nroot} /mnt"
+	echo "[ \$? -ne 0 ] && HaltError 'Mount root Partition..\!'"
 	echo "mkdir -p /mnt/boot/EFI /mnt/home"
 	echo "mount ${devdisk}1 /mnt/boot/EFI"
+	echo "[ \$? -ne 0 ] && HaltError 'Mount EFI boot Partition..\!'"
 	echo "mount ${devdisk}${nhome} /mnt/home"
+	echo "[ \$? -ne 0 ] && HaltError 'Mount /home Partition..\!'"
 }
 
 
@@ -658,12 +666,16 @@ PartRootVarTmp() {
 	local -i nhome=ntmp+1
 	echo -e "$ROOTPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 $nxpart 20GiB"
+	echo "[ \$? -ne 0 ] && HaltError 'Create root Partition..\!'"
 	echo -e "$VARPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 20GiB 25GiB"
+	echo "[ \$? -ne 0 ] && HaltError 'Create /var Partition..\!'"
 	echo -e "$TMPPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 25GiB 30GiB"
+	echo "[ \$? -ne 0 ] && HaltError 'Create /tmp Partition..\!'"
 	echo -e "$HOMEPARTLABEL"
 	echo "parted -s $devdisk mkpart primary ext4 30GiB 100%"
+	echo "[ \$? -ne 0 ] && HaltError 'Create /home Partition..\!'"
 	echo -e "$FORMATLABEL"
 	echo "mkfs.ext4 -F ${devdisk}${nroot}"
 	echo "mkfs.ext4 -F ${devdisk}${nvar}"
@@ -671,11 +683,16 @@ PartRootVarTmp() {
 	echo "mkfs.ext4 -F ${devdisk}${nhome}"
 	echo -e "$MOUNTLABEL"
 	echo "mount ${devdisk}${nroot} /mnt"
+	echo "[ \$? -ne 0 ] && HaltError 'Mount root Partition..\!'"
 	echo "mkdir -p /mnt/boot/EFI /mnt/{home,var,tmp}"
 	echo "mount ${devdisk}1 /mnt/boot/EFI"
+	echo "[ \$? -ne 0 ] && HaltError 'Mount EFI boot Partition..\!'"
 	echo "mount ${devdisk}${nvar} /mnt/var"
+	echo "[ \$? -ne 0 ] && HaltError 'Mount /var Partition..\!'"
 	echo "mount ${devdisk}${ntmp} /mnt/tmp"
+	echo "[ \$? -ne 0 ] && HaltError 'Mount /tmp Partition..\!'"
 	echo "mount ${devdisk}${nhome} /mnt/home"
+	echo "[ \$? -ne 0 ] && HaltError 'Mount /home Partition..\!'"
 }
 
 
@@ -686,7 +703,10 @@ GenMountScript() {
 	local devdisk="/dev/$DEVDISK"
 	local eFIPART="\n# ===== EFI Boot Partition ===== #
 parted -s $devdisk mklabel gpt
+[ \$? -ne 0 ] && HaltError 'GPT Label table..\!'
+
 parted -s $devdisk mkpart primary fat32 1MiB $endboot
+[ \$? -ne 0 ] && HaltError 'EFI boot partitioning..\!'
 parted -s $devdisk set 1 esp on
 mkfs.fat -F32 ${devdisk}1"
 	echo -e "$eFIPART" >> $INITFILE
@@ -696,6 +716,7 @@ mkfs.fat -F32 ${devdisk}1"
 		# ---- create swap partition ----
 		local sWAPPART="\n# ===== Swap Partition ===== #
 parted -s $devdisk mkpart primary linux-swap $endboot $nxpart
+[ \$? -ne 0 ] && HaltError 'Create swap partition..\!'
 mkswap ${devdisk}2
 swapon ${devdisk}2"
 		echo -e "$sWAPPART" >> $INITFILE
@@ -718,6 +739,7 @@ swapon ${devdisk}2"
 	# ---- make /swapfile ----
 	if [ $SWAPID -eq 1 ]; then
 		echo "dd if=/dev/zero of=/mnt/swapfile bs=1M count=2048" >> $INITFILE
+        echo "[ \$? -ne 0 ] && HaltError 'Create swap file..\!'" >> $INITFILE
 		echo "chmod 600 /mnt/swapfile" >> $INITFILE
 		echo "mkswap /mnt/swapfile" >> $INITFILE
 	fi
@@ -728,7 +750,6 @@ swapon ${devdisk}2"
 GenDesktopScript() {
 	local sUPERHOME="/home/$SUPERUSR"
 	local uSRCFG="$sUPERHOME/.config"
-#	local bGDIR="/usr/share/backgrounds/archlinux"
 	
 	# =============== Static install packages :- xorg, network-manater-applet archlinux-wallpaper ============== #
 	echo -e "\npacman --noconfirm -S xorg network-manager-applet archlinux-wallpaper" >> $CHROOTFILE
@@ -809,7 +830,7 @@ GenDesktopScript() {
 			cp $EXTDIR/extLightDM.sh /root
 			cp $DESKDIR/deCINNAMON.sh /root
 			chmod u+x /root/deCINNAMON.sh
-			echo "/root/deCINNAMON $sUPERHOME" >> $CHROOTFILE
+			echo "/root/deCINNAMON.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# Cinnamon Desktop
 		"openbox" )
 			cp $EXTDIR/extLightDM.sh /root
@@ -950,12 +971,13 @@ PrepareScript() {
 	kernel+=" ${KERNELTP}-headers linux-firmware"
 
 	local iNIT1="#!/usr/bin/bash\n\n
-PauseError() {
+HaltError() {
 	local pkey
 	echo '#*--------------------------------------------*'
-	echo \"#  Error : \$1  #\"
+	echo \"#  Halt Error : \$1  #\"
 	echo '#*--------------------------------------------*'
-	read -p 'Press any key...' pkey
+	read -p 'Press any key to stop...' pkey
+	exit 5
 }
 
 timedatectl set-timezone $TIMEZONE
@@ -964,7 +986,7 @@ hwclock --systohc
 pacman -Sy"
 
 	local iNIT2="pacstrap -K /mnt $PACKBASE ${kernel} $PACKBASE1
-[ \$? -ne 0 ] && PauseError 'pacstrap -K /mnt incomplete.'
+[ \$? -ne 0 ] && HaltError 'pacstrap -K /mnt incomplete.'
 genfstab -U /mnt >> /mnt/etc/fstab"
 
 	local iNIT3="cp /etc/hosts /mnt/etc/hosts
@@ -1021,13 +1043,11 @@ ConfirmInstall() {
 ArchCLI() {
 	local mch
 	local cmd
-	local rs=0
 	cmd="$STDDIALOG
 		--title 'Arch Linux Installation'
 		--yesno 'Warning...!\nAll data in /dev/$DEVDISK will be erased, then install...' 8 45 ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	if [ $rs -eq 0 ]; then
+	if [ $? -eq 0 ]; then
 		PrepareScript
 		ConfirmInstall
 	fi
@@ -1061,12 +1081,11 @@ SetAudio() {
 
 
 Xadditional() {
-	local rs=0
 	local mch
 	local num=`echo "$XPKLIST" | wc -w`
 	local cmd="$STDDIALOG
 			--title 'Optional X Desktop Packages'
-			--checklist 'Application Packages:\n[ $PACKBASE1 ]\nChoose additional packages to install:' 22 80 $num"
+			--checklist 'Application Packages:\n[ $PACKBASE1 ]\nChoose additional packages to install:' 23 80 $num"
 	for ep in $XPKLIST ; do
 		local pn=${XPKDES["$ep"]}
 		local pc=${XPKCHK["$ep"]}
@@ -1074,9 +1093,8 @@ Xadditional() {
 	done
 	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-    mch=`echo $mch | sed 's/"//g'`
-	if [ $rs -eq 0 ]; then
+	if [ $? -eq 0 ]; then
+		mch=`echo $mch | sed 's/"//g'`
 		for ep in $XPKLIST ; do
 			XPKCHK["$ep"]='off'
 		done
@@ -1167,14 +1185,12 @@ ArchGUI() {
 InstallArch() {
 	local mch
 	local cmd
-	local rs=0
 	cmd="$STDDIALOG --cancel-button 'Back'
 		--title 'Arch Linux Installation' --default-item 'cli' --menu 'Warning...!  All data in /dev/$DEVDISK will be erased :-' 10 69 2
 		'cli'  'Command Line Interface / No Graphical'
 		'gui'  'Graphical User Interface' ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	if [ $rs -eq 0 ]; then
+	if [ $? -eq 0 ]; then
 		case "$mch" in
 			'cli' ) ArchCLI
 				;;
@@ -1188,7 +1204,6 @@ InstallArch() {
 KeyboardMap() {
     local mch
     local cmd
-    local rs=0
 	local cl=`cat $KEYMAPFILE | wc -l`
 	cmd="$STDDIALOG \
 		--title 'Your KeyMap' --default-item \"$KEYMAP\" --menu 'Select keymap:-' 24 43 16"
@@ -1199,8 +1214,7 @@ KeyboardMap() {
 	done < $KEYMAPFILE
 	cmd+=" ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	if [ $rs -eq 0 ]; then
+	if [ $? -eq 0 ]; then
 		KEYMAP=$mch
         loadkeys $mch
 	fi
@@ -1215,8 +1229,7 @@ MirrorSetting() {
 		'auto' 'Use the result from Reflector'
 		'set'  'Custom setting......[$CUSTOMSET]' ${SWAPSTD}"
 	mch=`eval $cmd`
-	rs=$?
-	if [ $rs -eq 0 ] ; then
+	if [ $? -eq 0 ] ; then
 		MIRRORSET="$mch"
 		if [ "$mch" == "set" ] ; then
 			cmd="$STDDIALOG --nocancel
@@ -1249,8 +1262,8 @@ fi
 #=               Start main menu                =
 #------------------------------------------------
 tput civis
-declare VGATYPE=`lspci -k | grep -i ' vga '`
-declare CPUTYPE=`lscpu | grep -i 'Model name'`
+declare VGATYPE=$(lspci -k | grep -i ' vga ')
+declare CPUTYPE=$(lscpu | grep -i 'Model name')
 
 echo "$VGATYPE" | grep -i ' nvidia '
 if [ $? -eq 0 ] ; then
@@ -1323,6 +1336,6 @@ tput cvvis
 [ -f $CHROOTFILE ] && rm $CHROOTFILE
 [ -f $INITFILE ] && rm $INITFILE
 [ -f $MINAI_LOCK ] && rm $MINAI_LOCK
-rm /root/ext*.sh /root/de*.sh /root/wm*.sh
+# rm /root/ext*.sh /root/de*.sh /root/wm*.sh
 
 exit 0

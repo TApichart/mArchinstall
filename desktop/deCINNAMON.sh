@@ -7,4 +7,4 @@ if [ ! -d $1 ] ; then
 	exit 5
 fi
 
-source extLigthDM.sh
+source extLightDM.sh
