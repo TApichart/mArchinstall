@@ -226,7 +226,7 @@ declare NUMDEV=0
 declare -a DSKDEV
 declare -a DSKSIZ
 
-BACKTITLE="minArchinstall version 1.1.0 :  Bash Shell Script for installing Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
+BACKTITLE="minArchinstall version 1.2.0 :  Bash Shell Script for installing Arch Linux in minimal style.  Support only GPT/EFI without Encryption"	
 STDDIALOG="whiptail --backtitle \"$BACKTITLE\""
 SWAPSTD="3>&1 1>&2 2>&3"
 
