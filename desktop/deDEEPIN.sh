@@ -8,5 +8,6 @@ if [ ! -d $1 ] ; then
 fi
 
 source /root/extLightDM.sh
+# pacman --noconfirm -S deepin-extra
 pacman --noconfirm -S deepin-{terminal,calculator,clipboard,community-wallpapers}
 
