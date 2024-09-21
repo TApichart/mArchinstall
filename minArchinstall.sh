@@ -4,7 +4,7 @@
 # | This is a shell script for install Arch Linux in simply way.                                  |
 # | Writen by: InvisibleBox                                                                       |
 # | Date: Apr,16 2024                                                                             |
-# | Last Modified: August,22 2024                                                                 |
+# | Last Modified: September,21 2024                                                                 |
 # | License : CC0 -                                                                               |
 # |     CC0 (aka CC Zero) is a public dedication tool, which enables creators to give up          |
 # |     their copyright and put their works into the worldwide public domain. CC0                 |
@@ -213,7 +213,8 @@ DESKPAK["cinnamon"]="$LIGHTDM cinnamon metacity gnome-shell gnome-terminal"
 DESKPAK["lxde"]="lxde"
 DESKPAK["lxqt"]="$LIGHTDM lightdm-webkit-theme-litarvan lxqt lxqt-themes breeze-icons xscreensaver"
 DESKPAK["deepin"]="$LIGHTDM deepin deepin-kwin"
-DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
+#DESKPAK["gnome"]="gdm gnome gnome-extra gnome-tweaks"
+DESKPAK["gnome"]="$LIGHTDM gnome gnome-extra gnome-tweaks"
 DESKPAK["kde"]="sddm plasma kde-applications packagekit-qt5"
 DESKPAK["bspwm"]="$LIGHTDM bspwm sxhkd picom polybar dmenu mate-terminal nitrogen thunar"
 DESKPAK["bspwm_th"]="xfce4-settings rofi calc python-{pywal,gobject} git mpd mpc"
@@ -751,7 +752,7 @@ GenDesktopScript() {
 	local sUPERHOME="/home/$SUPERUSR"
 	local uSRCFG="$sUPERHOME/.config"
 	
-	# =============== Static install packages :- xorg, network-manater-applet archlinux-wallpaper ============== #
+	# ============== Static install packages :- xorg, network-manater-applet archlinux-wallpaper ============== #
 	echo -e "\npacman --noconfirm -S xorg network-manager-applet archlinux-wallpaper" >> $CHROOTFILE
 
 	echo "[ \$? -ne 0 ] && PauseError 'Install [xorg...] incomplete'" >> $CHROOTFILE
@@ -793,7 +794,8 @@ GenDesktopScript() {
 			echo "/root/deLXQT.sh $sUPERHOME" >> $CHROOTFILE
 			;;		# LXqt Desktop
 		"gnome" )
-			cp $EXTDIR/extGDM.sh /root
+			# cp $EXTDIR/extGDM.sh /root
+			cp $EXTDIR/extLightDM.sh /root
 			cp $DESKDIR/deGNOME.sh /root
 			chmod u+x /root/deGNOME.sh
 			echo "/root/deGNOME.sh $sUPERHOME" >> $CHROOTFILE
@@ -896,7 +898,7 @@ PauseError() {
 	echo '#*--------------------------------------------*'
 	echo \"#  Warning : \$1  #\"
 	echo '#*--------------------------------------------*'
-	read -p 'Do you want to continuew?....<Y/n>:' pkey
+	read -p 'Do you want to continue?....<Y/n>:' pkey
 	pkey=\${pkey^^}
 	if [ \"\$pkey\" == 'N' ]; then
 		exit 2
@@ -928,11 +930,9 @@ chmod 600 /home/${SUPERUSR}/.vimrc"
 	chmod u+x /root/extVIMrc.sh
 	echo -e "$rOOTSCRIPT1" > $CHROOTFILE
 	[ ${SRVCHK["openssh"]} == "on" ] && echo "systemctl enable sshd" >> $CHROOTFILE
-	if [ "${OPCHCK["neofetch"]}" == "on" ] ; then
-		echo "echo 'neofetch' >> /home/${SUPERUSR}/.bash_profile" >> $CHROOTFILE
-	else
-		echo "echo 'screenfetch' >> /home/${SUPERUSR}/.bash_profile" >> $CHROOTFILE
-	fi
+	local defFETCH="screenfetch"									# default program for display System Information
+	[ "${OPCHCK["neofetch"]}" == "on" ] && defFETCH="neofetch"		# if neofetch has checked, then setting neofetch as default
+	echo "echo '$defFETCH' >> /home/${SUPERUSR}/.bash_profile" >> $CHROOTFILE
 
 	local rOOTSCRIPT2="pacman --noconfirm -S grub efibootmgr
 [ \$? -ne 0 ] && PauseError 'Install [grub efibootmgr] incomplete.'
@@ -1032,7 +1032,12 @@ ConfirmInstall() {
 		MsgBox 'Install Arch Linux' "You can press Ctl+Alt+Fn to switch another console, then run $INITFILE."
 	else
 		$INITFILE
-		[ $? -eq 0 ] && MsgBox "Arch Linux Installation" "Install Arch Linux Completely......." && RS=1    # RS=1 is EXIT from Main menu
+		if [ $? -eq 0 ] ; then
+			MsgBox "Arch Linux Installation" "Install Arch Linux Completely......."
+			RS=1    # RS=1 is EXIT from Main menu
+		else
+			MsgBox 'ERROR: Arch Linux' 'Install Arch Linux Incompletely.......!'
+		fi
 	fi
 
 	[ -f $CHROOTFILE ] && rm $CHROOTFILE

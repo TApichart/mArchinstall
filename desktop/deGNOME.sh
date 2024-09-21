@@ -7,6 +7,6 @@ if [ ! -d $1 ] ; then
 	exit 5
 fi
 
-source /root/extGDM.sh
-
+# source /root/extGDM.sh
+source /root/extLightDM.sh
 
